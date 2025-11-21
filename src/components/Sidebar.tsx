@@ -1,24 +1,37 @@
-import { Home, Search, Library, Plus, Heart } from "lucide-react";
+import { Home, Search, Library, Plus, Heart, LogOut, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface SidebarProps {
   className?: string;
 }
 
 export const Sidebar = ({ className }: SidebarProps) => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+    navigate('/auth');
+  };
+
   return (
     <div className={cn("flex flex-col h-full bg-sidebar border-r border-sidebar-border", className)}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary">xzavior</h1>
+        <h1 className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate('/')}>xzavior</h1>
       </div>
 
       <nav className="flex-1 px-3">
         <div className="space-y-1">
-          <button className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+          <button onClick={() => navigate('/')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
             <Home className="w-6 h-6" />
             <span className="font-semibold">Home</span>
           </button>
-          <button className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+          <button onClick={() => navigate('/search')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
             <Search className="w-6 h-6" />
             <span className="font-semibold">Search</span>
           </button>
@@ -48,6 +61,20 @@ export const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </div>
       </nav>
+
+      <div className="p-4 border-t border-sidebar-border">
+        {user ? (
+          <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start">
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        ) : (
+          <Button onClick={() => navigate('/auth')} variant="ghost" className="w-full justify-start">
+            <LogIn className="w-4 h-4 mr-2" />
+            Sign In
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
