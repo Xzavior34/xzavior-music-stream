@@ -1,7 +1,11 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { Player } from "@/components/Player";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import album1 from "@/assets/album1.jpg";
 import album2 from "@/assets/album2.jpg";
 import album3 from "@/assets/album3.jpg";
@@ -9,22 +13,70 @@ import album4 from "@/assets/album4.jpg";
 import playlist1 from "@/assets/playlist1.jpg";
 import playlist2 from "@/assets/playlist2.jpg";
 
-const Index = () => {
-  const albums = [
-    { id: 1, title: "Neon Dreams", artist: "Electric Pulse", imageUrl: album1 },
-    { id: 2, title: "Urban Tales", artist: "Street Poets", imageUrl: album2 },
-    { id: 3, title: "Golden Hour", artist: "Sunset Riders", imageUrl: album3 },
-    { id: 4, title: "Midnight Jazz", artist: "The Blue Notes", imageUrl: album4 },
-    { id: 5, title: "Synthwave Vol. 1", artist: "Retro Beats", imageUrl: album1 },
-    { id: 6, title: "Bass & Beats", artist: "Underground Sound", imageUrl: album2 },
-  ];
+const imageMap: Record<string, string> = {
+  album1,
+  album2,
+  album3,
+  album4,
+  playlist1,
+  playlist2,
+};
 
-  const playlists = [
-    { id: 1, title: "Chill Vibes", description: "Relax and unwind with smooth beats", imageUrl: playlist1 },
-    { id: 2, title: "Workout Energy", description: "High energy tracks to power your workout", imageUrl: playlist2 },
-    { id: 3, title: "Focus Flow", description: "Stay focused with ambient sounds", imageUrl: playlist1 },
-    { id: 4, title: "Night Drive", description: "Perfect soundtrack for late night cruising", imageUrl: playlist2 },
-  ];
+interface Album {
+  id: string;
+  title: string;
+  artist_name: string;
+  image_url: string | null;
+}
+
+interface Playlist {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+}
+
+const Index = () => {
+  const navigate = useNavigate();
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const { data: albumsData } = await supabase
+        .from('albums')
+        .select('*')
+        .limit(6);
+
+      const { data: playlistsData } = await supabase
+        .from('playlists')
+        .select('*')
+        .eq('is_public', true)
+        .limit(4);
+
+      if (albumsData) {
+        const albumsWithImages = albumsData.map((album, index) => ({
+          ...album,
+          image_url: album.image_url || [album1, album2, album3, album4][index % 4],
+        }));
+        setAlbums(albumsWithImages);
+      }
+
+      if (playlistsData) {
+        const playlistsWithImages = playlistsData.map((playlist, index) => ({
+          ...playlist,
+          image_url: playlist.image_url || [playlist1, playlist2][index % 2],
+        }));
+        setPlaylists(playlistsWithImages);
+      }
+    } catch (error: any) {
+      toast.error('Failed to load data');
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -48,12 +100,13 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {albums.map((album) => (
-                <AlbumCard
-                  key={album.id}
-                  title={album.title}
-                  artist={album.artist}
-                  imageUrl={album.imageUrl}
-                />
+                <div key={album.id} onClick={() => navigate(`/album/${album.id}`)}>
+                  <AlbumCard
+                    title={album.title}
+                    artist={album.artist_name}
+                    imageUrl={album.image_url || album1}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -68,12 +121,13 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {playlists.map((playlist) => (
-                <PlaylistCard
-                  key={playlist.id}
-                  title={playlist.title}
-                  description={playlist.description}
-                  imageUrl={playlist.imageUrl}
-                />
+                <div key={playlist.id} onClick={() => navigate(`/playlist/${playlist.id}`)}>
+                  <PlaylistCard
+                    title={playlist.title}
+                    description={playlist.description || ''}
+                    imageUrl={playlist.image_url || playlist1}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -88,12 +142,13 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {albums.slice(0, 4).map((album) => (
-                <AlbumCard
-                  key={`recent-${album.id}`}
-                  title={album.title}
-                  artist={album.artist}
-                  imageUrl={album.imageUrl}
-                />
+                <div key={`recent-${album.id}`} onClick={() => navigate(`/album/${album.id}`)}>
+                  <AlbumCard
+                    title={album.title}
+                    artist={album.artist_name}
+                    imageUrl={album.image_url || album1}
+                  />
+                </div>
               ))}
             </div>
           </section>
