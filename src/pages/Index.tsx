@@ -5,13 +5,29 @@ import { MobileNav } from "@/components/MobileNav";
 import { Player } from "@/components/Player";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
-import { deezerApi, DeezerAlbum, DeezerPlaylist } from "@/services/deezerApi";
+import { musicService } from "@/services/musicService";
 import { toast } from "sonner";
+
+interface Album {
+  id: string | number;
+  title: string;
+  artist: { name: string };
+  cover_xl?: string;
+  cover_medium?: string;
+}
+
+interface Playlist {
+  id: string | number;
+  title: string;
+  description: string;
+  picture_xl?: string;
+  picture_medium?: string;
+}
 
 const Index = () => {
   const navigate = useNavigate();
-  const [albums, setAlbums] = useState<DeezerAlbum[]>([]);
-  const [playlists, setPlaylists] = useState<DeezerPlaylist[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,12 +38,16 @@ const Index = () => {
     try {
       setLoading(true);
       const [albumsData, playlistsData] = await Promise.all([
-        deezerApi.getChartAlbums(),
-        deezerApi.getEditorialPlaylists(),
+        musicService.getAlbums(),
+        musicService.getPlaylists(),
       ]);
 
       setAlbums(albumsData.slice(0, 12));
       setPlaylists(playlistsData.slice(0, 8));
+      
+      if (albumsData.length > 0 || playlistsData.length > 0) {
+        toast.success('Music loaded successfully');
+      }
     } catch (error) {
       toast.error('Failed to load music data');
     } finally {
