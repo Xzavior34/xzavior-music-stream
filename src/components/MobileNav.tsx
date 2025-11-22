@@ -1,4 +1,5 @@
 import { Home, Search, Library, Menu, X } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -26,14 +27,17 @@ export const MobileNav = () => {
           <h1 className="text-xl font-bold text-primary cursor-pointer" onClick={() => navigate('/')}>
             xzavior
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden"
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(!isOpen)}
+              className="lg:hidden"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
       </div>
 

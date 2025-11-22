@@ -1,4 +1,5 @@
 import { Home, Search, Library, Plus, Heart, LogOut, LogIn } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,6 +62,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </div>
       </nav>
+
+      <div className="px-3 py-2">
+        <ThemeToggle />
+      </div>
 
       <div className="p-4 border-t border-sidebar-border">
         {user ? (
