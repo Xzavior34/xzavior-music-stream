@@ -1,4 +1,4 @@
-import { Home, Search, Library, Menu, User, Settings, LogOut } from "lucide-react";
+import { Home, Search, Library, Menu, X, Play, Heart, MonitorSpeaker } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export const MobileNav = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,38 +20,33 @@ export const MobileNav = () => {
     setIsOpen(false);
   };
 
-  // Helper to determine active state
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <>
-      {/* --- TOP HEADER (Spotify Style) --- */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 pt-4 px-4 bg-gradient-to-b from-background to-transparent">
-        <div className="flex items-center gap-4 mb-2">
-          {/* Profile Icon (Triggers Sidebar) */}
-          <button 
-            onClick={() => setIsOpen(true)}
-            className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold border border-transparent hover:border-primary transition-all"
-          >
-            {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
-          </button>
-
-          {/* Filter Pills (Visual only based on screenshot) */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
-            <span className="px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium whitespace-nowrap cursor-pointer hover:bg-secondary/80">
-              All
-            </span>
-            <span className="px-4 py-1.5 rounded-full bg-transparent border border-border text-muted-foreground text-xs font-medium whitespace-nowrap cursor-pointer hover:bg-secondary/50">
-              Music
-            </span>
-            <span className="px-4 py-1.5 rounded-full bg-transparent border border-border text-muted-foreground text-xs font-medium whitespace-nowrap cursor-pointer hover:bg-secondary/50">
-              Podcasts
-            </span>
+      {/* --- TOP HEADER --- */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm pt-3 pb-2 px-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Profile Icon (Triggers Sidebar) - The 'P' in your screenshot */}
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm"
+            >
+              {user?.email ? user.email.charAt(0).toUpperCase() : "X"}
+            </button>
+            
+            {/* Brand Name restored */}
+            <h1 className="text-xl font-bold text-primary tracking-tight">
+              xzavior
+            </h1>
           </div>
+          
+          <ThemeToggle />
         </div>
       </div>
 
-      {/* --- SIDEBAR OVERLAY (Settings/Menu) --- */}
+      {/* --- SIDEBAR (Hidden by default) --- */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
@@ -62,93 +56,93 @@ export const MobileNav = () => {
 
       <div
         className={cn(
-          "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-card border-r border-border shadow-xl transform transition-transform duration-300 ease-in-out",
+          "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-sidebar border-r border-sidebar-border transition-transform duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="p-6 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                {user?.email ? user.email.charAt(0).toUpperCase() : <User />}
-              </div>
-              <div>
-                <p className="font-semibold">{user?.email?.split('@')[0] || 'Guest'}</p>
-                <p className="text-xs text-muted-foreground">View Profile</p>
-              </div>
+        <div className="flex flex-col h-full p-6">
+            <div className="flex items-center justify-between mb-8">
+                <span className="font-bold text-lg">Menu</span>
+                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                    <X className="w-5 h-5" />
+                </Button>
             </div>
-            <ThemeToggle />
-          </div>
-
-          <div className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => navigate('/')}>
-              <Settings className="w-5 h-5" /> Settings
-            </Button>
-          </div>
-
-          <div className="mt-auto pt-6 border-t border-border">
-            {user ? (
-              <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10">
-                <LogOut className="w-5 h-5" /> Sign Out
-              </Button>
-            ) : (
-              <Button onClick={() => navigate('/auth')} className="w-full">
-                Sign In
-              </Button>
-            )}
-          </div>
+            {/* Sidebar Links */}
+            <nav className="space-y-2">
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/'); setIsOpen(false); }}>
+                    <Home className="mr-2 w-5 h-5" /> Home
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/search'); setIsOpen(false); }}>
+                    <Search className="mr-2 w-5 h-5" /> Search
+                </Button>
+            </nav>
+            
+            <div className="mt-auto border-t pt-4">
+                 <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-destructive">
+                    Sign Out
+                </Button>
+            </div>
         </div>
       </div>
 
-      {/* --- BOTTOM NAVIGATION (Spotify Style) --- */}
-      {/* Note: If you have a mini-player, place it immediately BEFORE this div with z-index 40 and bottom-[60px] */}
-      
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-white/5">
-        <div className="flex items-center justify-around pb-4 pt-3 px-2">
-          {/* Home */}
+      {/* --- FLOATING MINI PLAYER (Like the blue bar in screenshot) --- */}
+      {/* Positioned bottom-[62px] to sit exactly on top of the 60px nav bar with 2px gap */}
+      <div className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-md shadow-lg overflow-hidden">
+        <div className="flex items-center justify-between p-2 h-14">
+          <div className="flex items-center gap-3 overflow-hidden">
+             {/* Album Art Placeholder */}
+            <div className="w-10 h-10 bg-black/20 rounded flex-shrink-0" />
+            <div className="flex flex-col truncate">
+              <span className="text-sm font-semibold truncate">Mortals Funk Remix</span>
+              <span className="text-xs opacity-80 truncate">LXNGVX</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 pr-2">
+             <MonitorSpeaker className="w-5 h-5 opacity-70" />
+             <Heart className="w-5 h-5 opacity-70" />
+             <Play className="w-6 h-6 fill-current" />
+          </div>
+        </div>
+        {/* Progress bar line at bottom of player */}
+        <div className="h-[2px] bg-white/20 w-full">
+            <div className="h-full bg-white w-1/3" />
+        </div>
+      </div>
+
+      {/* --- BOTTOM NAVIGATION --- */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border h-[60px]">
+        <div className="flex items-center justify-around h-full px-2 pb-1">
           <button
             onClick={() => navigate('/')}
             className={cn(
-              "flex flex-col items-center gap-1 transition-colors duration-200",
-              isActive('/') ? "text-white" : "text-muted-foreground hover:text-white"
+              "flex flex-col items-center gap-1 flex-1",
+              isActive('/') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Home className={cn("w-6 h-6", isActive('/') && "fill-current")} />
             <span className="text-[10px] font-medium">Home</span>
           </button>
 
-          {/* Search */}
           <button
             onClick={() => navigate('/search')}
             className={cn(
-              "flex flex-col items-center gap-1 transition-colors duration-200",
-              isActive('/search') ? "text-white" : "text-muted-foreground hover:text-white"
+              "flex flex-col items-center gap-1 flex-1",
+              isActive('/search') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Search className={cn("w-6 h-6", isActive('/search') && "stroke-[3px]")} />
+            <Search className="w-6 h-6" strokeWidth={isActive('/search') ? 3 : 2} />
             <span className="text-[10px] font-medium">Search</span>
           </button>
 
-          {/* Library */}
           <button
-            onClick={() => navigate('/library')} // Assuming you have a route for this
+            onClick={() => navigate('/library')}
             className={cn(
-              "flex flex-col items-center gap-1 transition-colors duration-200",
-              isActive('/library') ? "text-white" : "text-muted-foreground hover:text-white"
+              "flex flex-col items-center gap-1 flex-1",
+              isActive('/library') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Library className={cn("w-6 h-6", isActive('/library') && "fill-current")} />
             <span className="text-[10px] font-medium">Your Library</span>
-          </button>
-          
-          {/* Premium/Profile (Optional - to match 4 items in screenshot) */}
-           {/* You can remove this if you only want 3 items */}
-           <button
-            onClick={() => setIsOpen(true)}
-            className="flex flex-col items-center gap-1 transition-colors duration-200 text-muted-foreground hover:text-white"
-          >
-            <Menu className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Menu</span>
           </button>
         </div>
       </div>
