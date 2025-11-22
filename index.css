@@ -1,0 +1,42 @@
+.player-artwork {
+  width: 80vw;
+  max-width: 340px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(30,185,84,0.2);
+  margin: 0 auto;
+  display: block;
+}
+
+.player-track-info {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.player-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.player-artist {
+  font-size: 1rem;
+  color: #1db954;
+}
+
+.player-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.play-btn {
+  background: #1db954;
+  color: #fff;
+  border-radius: 32px;
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  box-shadow: 0 4px 20px rgba(30,185,84,0.25);
+  border: none;
+}
