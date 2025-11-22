@@ -1,45 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
+import { MobileNav } from "@/components/MobileNav";
 import { Player } from "@/components/Player";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
-import { supabase } from "@/integrations/supabase/client";
+import { deezerApi, DeezerAlbum, DeezerPlaylist } from "@/services/deezerApi";
 import { toast } from "sonner";
-import album1 from "@/assets/album1.jpg";
-import album2 from "@/assets/album2.jpg";
-import album3 from "@/assets/album3.jpg";
-import album4 from "@/assets/album4.jpg";
-import playlist1 from "@/assets/playlist1.jpg";
-import playlist2 from "@/assets/playlist2.jpg";
-
-const imageMap: Record<string, string> = {
-  album1,
-  album2,
-  album3,
-  album4,
-  playlist1,
-  playlist2,
-};
-
-interface Album {
-  id: string;
-  title: string;
-  artist_name: string;
-  image_url: string | null;
-}
-
-interface Playlist {
-  id: string;
-  title: string;
-  description: string | null;
-  image_url: string | null;
-}
 
 const Index = () => {
   const navigate = useNavigate();
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [albums, setAlbums] = useState<DeezerAlbum[]>([]);
+  const [playlists, setPlaylists] = useState<DeezerPlaylist[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
@@ -47,111 +20,106 @@ const Index = () => {
 
   const fetchData = async () => {
     try {
-      const { data: albumsData } = await supabase
-        .from('albums')
-        .select('*')
-        .limit(6);
+      setLoading(true);
+      const [albumsData, playlistsData] = await Promise.all([
+        deezerApi.getChartAlbums(),
+        deezerApi.getEditorialPlaylists(),
+      ]);
 
-      const { data: playlistsData } = await supabase
-        .from('playlists')
-        .select('*')
-        .eq('is_public', true)
-        .limit(4);
-
-      if (albumsData) {
-        const albumsWithImages = albumsData.map((album, index) => ({
-          ...album,
-          image_url: album.image_url || [album1, album2, album3, album4][index % 4],
-        }));
-        setAlbums(albumsWithImages);
-      }
-
-      if (playlistsData) {
-        const playlistsWithImages = playlistsData.map((playlist, index) => ({
-          ...playlist,
-          image_url: playlist.image_url || [playlist1, playlist2][index % 2],
-        }));
-        setPlaylists(playlistsWithImages);
-      }
-    } catch (error: any) {
-      toast.error('Failed to load data');
+      setAlbums(albumsData.slice(0, 12));
+      setPlaylists(playlistsData.slice(0, 8));
+    } catch (error) {
+      toast.error('Failed to load music data');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar className="w-64 flex-shrink-0" />
+      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
+      <MobileNav />
       
-      <main className="flex-1 overflow-y-auto pb-32">
-        <div className="p-8">
+      <main className="flex-1 overflow-y-auto pb-32 lg:pb-24 pt-[65px] lg:pt-0">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Welcome Section */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">Good evening</h1>
-            <p className="text-muted-foreground">Your favorite tracks are waiting</p>
+          <div className="mb-8 lg:mb-12">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Good evening</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Discover trending music from around the world
+            </p>
           </div>
 
-          {/* Featured Albums */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Popular Albums</h2>
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Show all
-              </button>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {albums.map((album) => (
-                <div key={album.id} onClick={() => navigate(`/album/${album.id}`)}>
-                  <AlbumCard
-                    title={album.title}
-                    artist={album.artist_name}
-                    imageUrl={album.image_url || album1}
-                  />
+          ) : (
+            <>
+              {/* Featured Albums */}
+              <section className="mb-8 lg:mb-12">
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold">Top Albums</h2>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+                  {albums.slice(0, 6).map((album) => (
+                    <div
+                      key={album.id}
+                      onClick={() => navigate(`/album/${album.id}`)}
+                    >
+                      <AlbumCard
+                        title={album.title}
+                        artist={album.artist.name}
+                        imageUrl={album.cover_xl || album.cover_medium}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-          {/* Featured Playlists */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Made For You</h2>
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Show all
-              </button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {playlists.map((playlist) => (
-                <div key={playlist.id} onClick={() => navigate(`/playlist/${playlist.id}`)}>
-                  <PlaylistCard
-                    title={playlist.title}
-                    description={playlist.description || ''}
-                    imageUrl={playlist.image_url || playlist1}
-                  />
+              {/* Featured Playlists */}
+              <section className="mb-8 lg:mb-12">
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold">Featured Playlists</h2>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {playlists.slice(0, 4).map((playlist) => (
+                    <div
+                      key={playlist.id}
+                      onClick={() => navigate(`/playlist/${playlist.id}`)}
+                    >
+                      <PlaylistCard
+                        title={playlist.title}
+                        description={playlist.description || 'Curated playlist'}
+                        imageUrl={playlist.picture_xl || playlist.picture_medium}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-          {/* Recently Played */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Recently Played</h2>
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Show all
-              </button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {albums.slice(0, 4).map((album) => (
-                <div key={`recent-${album.id}`} onClick={() => navigate(`/album/${album.id}`)}>
-                  <AlbumCard
-                    title={album.title}
-                    artist={album.artist_name}
-                    imageUrl={album.image_url || album1}
-                  />
+              {/* More Albums */}
+              <section>
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold">More to Explore</h2>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+                  {albums.slice(6, 12).map((album) => (
+                    <div
+                      key={album.id}
+                      onClick={() => navigate(`/album/${album.id}`)}
+                    >
+                      <AlbumCard
+                        title={album.title}
+                        artist={album.artist.name}
+                        imageUrl={album.cover_xl || album.cover_medium}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
         </div>
       </main>
 
