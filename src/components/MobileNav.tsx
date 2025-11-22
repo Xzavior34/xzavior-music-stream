@@ -1,4 +1,4 @@
-import { Home, Search, Library, Menu, X, Play, Heart, MonitorSpeaker } from "lucide-react";
+import { Home, Search, Library, Menu, X, Play, Heart, MonitorSpeaker, Plus, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,9 +22,18 @@ export const MobileNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Define the new bottom nav links
+  const navLinks = [
+    { path: '/', label: 'Home', Icon: Home },
+    { path: '/search', label: 'Search', Icon: Search },
+    { path: '/library', label: 'Your Library', Icon: Library },
+    { path: '/premium', label: 'Premium', Icon: Sparkles }, // Using Sparkles for Premium
+    { path: '/create', label: 'Create', Icon: Plus }, // Placeholder for Create/Liked
+  ];
+
   return (
     <>
-      {/* --- TOP HEADER --- */}
+      {/* --- TOP HEADER (Unchanged, retained for context) --- */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm pt-3 pb-2 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -46,7 +55,7 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- SIDEBAR (Hidden by default) --- */}
+      {/* --- SIDEBAR (Hidden by default) (Unchanged, retained for context) --- */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
@@ -75,6 +84,9 @@ export const MobileNav = () => {
                 <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/search'); setIsOpen(false); }}>
                     <Search className="mr-2 w-5 h-5" /> Search
                 </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/library'); setIsOpen(false); }}>
+                    <Library className="mr-2 w-5 h-5" /> Library
+                </Button>
             </nav>
             
             <div className="mt-auto border-t pt-4">
@@ -85,8 +97,7 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- FLOATING MINI PLAYER (Like the blue bar in screenshot) --- */}
-      {/* Positioned bottom-[62px] to sit exactly on top of the 60px nav bar with 2px gap */}
+      {/* --- FLOATING MINI PLAYER (Unchanged, retained for context) --- */}
       <div className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-md shadow-lg overflow-hidden">
         <div className="flex items-center justify-between p-2 h-14">
           <div className="flex items-center gap-3 overflow-hidden">
@@ -109,41 +120,29 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- BOTTOM NAVIGATION --- */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border h-[60px]">
-        <div className="flex items-center justify-around h-full px-2 pb-1">
-          <button
-            onClick={() => navigate('/')}
-            className={cn(
-              "flex flex-col items-center gap-1 flex-1",
-              isActive('/') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Home className={cn("w-6 h-6", isActive('/') && "fill-current")} />
-            <span className="text-[10px] font-medium">Home</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/search')}
-            className={cn(
-              "flex flex-col items-center gap-1 flex-1",
-              isActive('/search') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Search className="w-6 h-6" strokeWidth={isActive('/search') ? 3 : 2} />
-            <span className="text-[10px] font-medium">Search</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/library')}
-            className={cn(
-              "flex flex-col items-center gap-1 flex-1",
-              isActive('/library') ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Library className={cn("w-6 h-6", isActive('/library') && "fill-current")} />
-            <span className="text-[10px] font-medium">Your Library</span>
-          </button>
+      {/* --- BOTTOM NAVIGATION (MODIFIED TO MATCH MOBILE APP DESIGN) --- */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-t border-gray-800 h-[60px]">
+        <div className="flex items-center justify-around h-full px-2">
+          {navLinks.map(({ path, label, Icon }) => (
+            <button
+              key={path}
+              onClick={() => navigate(path)}
+              // The active path determines the icon fill/weight and text color
+              className={cn(
+                "flex flex-col items-center gap-0.5 flex-1 pt-1",
+                isActive(path) ? "text-white" : "text-gray-400 hover:text-white"
+              )}
+            >
+              <Icon 
+                className="w-6 h-6" 
+                // Fill the icon for Home and Library if active, like in the screenshot
+                fill={isActive(path) && (label === 'Home' || label === 'Your Library') ? 'currentColor' : 'none'}
+                // Use bolder stroke for Search icon when active
+                strokeWidth={isActive(path) && label === 'Search' ? 3 : 2}
+              />
+              <span className="text-[10px] font-medium">{label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </>
