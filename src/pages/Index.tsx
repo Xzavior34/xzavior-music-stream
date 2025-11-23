@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Player } from "@/components/Player";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
+import { Player } from "@/components/Player";
 import { musicService } from "@/services/musicService";
+import { deezerApi } from "@/services/deezerApi";
+import { useAudio } from "@/contexts/AudioContext";
+import { Play } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface Album {
@@ -28,7 +31,9 @@ const Index = () => {
   const navigate = useNavigate();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [trendingTracks, setTrendingTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { playTrack } = useAudio();
 
   useEffect(() => {
     fetchData();
@@ -37,13 +42,15 @@ const Index = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [albumsData, playlistsData] = await Promise.all([
+      const [albumsData, playlistsData, chartData] = await Promise.all([
         musicService.getAlbums(),
         musicService.getPlaylists(),
+        deezerApi.getChart(),
       ]);
 
       setAlbums(albumsData.slice(0, 12));
       setPlaylists(playlistsData.slice(0, 8));
+      setTrendingTracks(chartData.slice(0, 10));
       
       if (albumsData.length > 0 || playlistsData.length > 0) {
         toast.success('Music loaded successfully');
@@ -53,6 +60,16 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePlayTrack = (track: any) => {
+    playTrack({
+      id: track.id.toString(),
+      title: track.title,
+      artist_name: track.artist.name,
+      audio_url: track.preview,
+      duration: track.duration,
+    });
   };
 
   return (
@@ -76,6 +93,38 @@ const Index = () => {
             </div>
           ) : (
             <>
+              {/* Trending Songs */}
+              <section className="mb-8 lg:mb-12">
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold">Trending Now</h2>
+                </div>
+                <div className="space-y-1">
+                  {trendingTracks.map((track, index) => (
+                    <div
+                      key={track.id}
+                      onClick={() => handlePlayTrack(track)}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer group"
+                    >
+                      <span className="text-sm text-muted-foreground w-6 text-center">
+                        {index + 1}
+                      </span>
+                      <img
+                        src={track.album.cover_medium}
+                        alt={track.title}
+                        className="w-12 h-12 rounded flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate text-sm">{track.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {track.artist.name}
+                        </p>
+                      </div>
+                      <Play className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
               {/* Featured Albums */}
               <section className="mb-8 lg:mb-12">
                 <div className="flex items-center justify-between mb-4 lg:mb-6">

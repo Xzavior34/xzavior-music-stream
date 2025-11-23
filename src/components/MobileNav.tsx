@@ -22,13 +22,13 @@ export const MobileNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Define the new bottom nav links
+  // Define the new bottom nav links to match Spotify mobile
   const navLinks = [
     { path: '/', label: 'Home', Icon: Home },
     { path: '/search', label: 'Search', Icon: Search },
     { path: '/library', label: 'Your Library', Icon: Library },
-    { path: '/premium', label: 'Premium', Icon: Sparkles }, // Using Sparkles for Premium
-    { path: '/create', label: 'Create', Icon: Plus }, // Placeholder for Create/Liked
+    { path: '/premium', label: 'Premium', Icon: Sparkles },
+    { path: '/create', label: 'Create', Icon: Plus },
   ];
 
   return (
@@ -120,27 +120,24 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- BOTTOM NAVIGATION (MODIFIED TO MATCH MOBILE APP DESIGN) --- */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-t border-gray-800 h-[60px]">
-        <div className="flex items-center justify-around h-full px-2">
+      {/* --- BOTTOM NAVIGATION (SPOTIFY-LIKE DESIGN) --- */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border h-[62px]">
+        <div className="flex items-center justify-around h-full px-1">
           {navLinks.map(({ path, label, Icon }) => (
             <button
               key={path}
               onClick={() => navigate(path)}
-              // The active path determines the icon fill/weight and text color
               className={cn(
-                "flex flex-col items-center gap-0.5 flex-1 pt-1",
-                isActive(path) ? "text-white" : "text-gray-400 hover:text-white"
+                "flex flex-col items-center gap-1 flex-1 py-1",
+                isActive(path) ? "text-foreground" : "text-muted-foreground"
               )}
             >
               <Icon 
                 className="w-6 h-6" 
-                // Fill the icon for Home and Library if active, like in the screenshot
                 fill={isActive(path) && (label === 'Home' || label === 'Your Library') ? 'currentColor' : 'none'}
-                // Use bolder stroke for Search icon when active
-                strokeWidth={isActive(path) && label === 'Search' ? 3 : 2}
+                strokeWidth={isActive(path) ? 2.5 : 2}
               />
-              <span className="text-[10px] font-medium">{label}</span>
+              <span className="text-[10px] font-medium leading-none">{label}</span>
             </button>
           ))}
         </div>
