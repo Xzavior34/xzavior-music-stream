@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Player } from "@/components/Player";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Play } from "lucide-react";
 import { AlbumCard } from "@/components/AlbumCard";
@@ -155,8 +154,6 @@ const Search = () => {
           )}
         </div>
       </main>
-
-      <Player />
     </div>
   );
 };

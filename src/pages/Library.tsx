@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Player } from "@/components/Player";
 import { useAudio } from "@/contexts/AudioContext";
 import { Music, Heart, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -148,8 +147,6 @@ export default function Library() {
           )}
         </div>
       </main>
-
-      <Player />
     </div>
   );
 }

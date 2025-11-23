@@ -1,6 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Player } from "@/components/Player";
 import { Plus, List, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -44,8 +43,6 @@ export default function Create() {
           </div>
         </div>
       </main>
-
-      <Player />
     </div>
   );
 }

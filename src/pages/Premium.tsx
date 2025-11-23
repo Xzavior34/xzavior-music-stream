@@ -1,6 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Player } from "@/components/Player";
 import { Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,8 +46,6 @@ export default function Premium() {
           </div>
         </div>
       </main>
-
-      <Player />
     </div>
   );
 }
