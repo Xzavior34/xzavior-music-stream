@@ -1,10 +1,11 @@
-import { Home, Search, Library, Menu, X, Play, Heart, MonitorSpeaker, Plus, Sparkles } from "lucide-react";
+import { Home, Search, Library, Menu, X, Play, Pause, Heart, MonitorSpeaker, Plus, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAudio } from "@/contexts/AudioContext";
 import { toast } from "sonner";
 
 export const MobileNav = () => {
@@ -12,6 +13,7 @@ export const MobileNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { currentTrack, isPlaying, progress, togglePlay } = useAudio();
 
   const handleSignOut = async () => {
     await signOut();
@@ -97,28 +99,47 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- FLOATING MINI PLAYER (Unchanged, retained for context) --- */}
-      <div className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-md shadow-lg overflow-hidden">
-        <div className="flex items-center justify-between p-2 h-14">
-          <div className="flex items-center gap-3 overflow-hidden">
-             {/* Album Art Placeholder */}
-            <div className="w-10 h-10 bg-black/20 rounded flex-shrink-0" />
-            <div className="flex flex-col truncate">
-              <span className="text-sm font-semibold truncate">Mortals Funk Remix</span>
-              <span className="text-xs opacity-80 truncate">LXNGVX</span>
+      {/* --- FLOATING MINI PLAYER --- */}
+      {currentTrack && (
+        <div 
+          onClick={() => navigate('/now-playing')}
+          className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-lg shadow-lg overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center justify-between p-3 h-16">
+            <div className="flex items-center gap-3 overflow-hidden flex-1">
+              {/* Album Art */}
+              <div className="w-12 h-12 bg-black/20 rounded flex-shrink-0 flex items-center justify-center">
+                <div className="w-10 h-10 rounded bg-gradient-to-br from-white/20 to-white/5" />
+              </div>
+              <div className="flex flex-col truncate flex-1">
+                <span className="text-sm font-semibold truncate">{currentTrack.title}</span>
+                <span className="text-xs opacity-90 truncate">{currentTrack.artist_name}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 pl-3">
+              <MonitorSpeaker className="w-5 h-5 opacity-80" />
+              <Heart className="w-5 h-5 opacity-80" />
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+                className="hover:scale-110 transition-transform"
+              >
+                {isPlaying ? (
+                  <Pause className="w-7 h-7" fill="currentColor" />
+                ) : (
+                  <Play className="w-7 h-7" fill="currentColor" />
+                )}
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-3 pr-2">
-             <MonitorSpeaker className="w-5 h-5 opacity-70" />
-             <Heart className="w-5 h-5 opacity-70" />
-             <Play className="w-6 h-6 fill-current" />
+          {/* Progress bar */}
+          <div className="h-[3px] bg-white/20 w-full">
+            <div className="h-full bg-white transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
-        {/* Progress bar line at bottom of player */}
-        <div className="h-[2px] bg-white/20 w-full">
-            <div className="h-full bg-white w-1/3" />
-        </div>
-      </div>
+      )}
 
       {/* --- BOTTOM NAVIGATION (SPOTIFY-LIKE DESIGN) --- */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border h-[62px]">

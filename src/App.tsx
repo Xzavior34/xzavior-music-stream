@@ -14,6 +14,7 @@ import PlaylistDetail from "./pages/PlaylistDetail";
 import Library from "./pages/Library";
 import Premium from "./pages/Premium";
 import Create from "./pages/Create";
+import NowPlaying from "./pages/NowPlaying";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/library" element={<Library />} />
                 <Route path="/premium" element={<Premium />} />
                 <Route path="/create" element={<Create />} />
+                <Route path="/now-playing" element={<NowPlaying />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
