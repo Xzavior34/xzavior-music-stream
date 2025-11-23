@@ -11,6 +11,9 @@ import Auth from "./pages/Auth";
 import Search from "./pages/Search";
 import AlbumDetail from "./pages/AlbumDetail";
 import PlaylistDetail from "./pages/PlaylistDetail";
+import Library from "./pages/Library";
+import Premium from "./pages/Premium";
+import Create from "./pages/Create";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/album/:id" element={<AlbumDetail />} />
                 <Route path="/playlist/:id" element={<PlaylistDetail />} />
+                <Route path="/library" element={<Library />} />
+                <Route path="/premium" element={<Premium />} />
+                <Route path="/create" element={<Create />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
