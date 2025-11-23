@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
-import { Player } from '@/components/Player';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, ArrowLeft } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
@@ -183,8 +182,6 @@ const AlbumDetail = () => {
           </div>
         </div>
       </main>
-
-      <Player />
     </div>
   );
 };

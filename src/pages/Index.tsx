@@ -3,7 +3,6 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
-import { Player } from "@/components/Player";
 import { musicService } from "@/services/musicService";
 import { deezerApi } from "@/services/deezerApi";
 import { useAudio } from "@/contexts/AudioContext";
@@ -77,7 +76,7 @@ const Index = () => {
       <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
       <MobileNav />
       
-      <main className="flex-1 overflow-y-auto pb-32 lg:pb-24 pt-[65px] lg:pt-0">
+      <main className="flex-1 overflow-y-auto pb-[140px] lg:pb-24 pt-[65px] lg:pt-0">
         <div className="p-4 sm:p-6 lg:p-8">
           {/* Welcome Section */}
           <div className="mb-8 lg:mb-12">
@@ -191,8 +190,6 @@ const Index = () => {
           )}
         </div>
       </main>
-
-      <Player />
     </div>
   );
 };
