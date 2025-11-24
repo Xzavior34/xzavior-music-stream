@@ -45,36 +45,43 @@ export default function NowPlaying() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/30 via-background to-background pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-primary/20 via-background to-background pb-32">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between p-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted/50 rounded-full transition-all hover:scale-110">
             <ChevronDown className="w-6 h-6" />
           </button>
           <div className="text-center flex-1">
-            <p className="text-xs text-muted-foreground">PLAYING FROM</p>
-            <p className="text-sm font-semibold">Album</p>
+            <p className="text-xs text-muted-foreground font-semibold tracking-wider">PLAYING FROM</p>
+            <p className="text-sm font-bold">Album</p>
           </div>
-          <button className="p-2 hover:bg-muted rounded-full transition-colors">
+          <button className="p-2 hover:bg-muted/50 rounded-full transition-all hover:scale-110">
             <MoreHorizontal className="w-6 h-6" />
           </button>
         </div>
       </div>
 
       {/* Album Art */}
-      <div className="px-6 pt-8 pb-6">
-        <div className="aspect-square w-full max-w-md mx-auto rounded-lg bg-gradient-to-br from-primary/40 to-primary/10 shadow-2xl" />
+      <div className="px-6 pt-12 pb-8">
+        <div className="aspect-square w-full max-w-md mx-auto rounded-2xl bg-gradient-to-br from-primary/50 via-primary/30 to-primary/10 shadow-premium animate-pulse" style={{ animationDuration: '3s' }} />
       </div>
 
       {/* Track Info */}
-      <div className="px-6 pb-6">
+      <div className="px-6 pb-8">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold truncate mb-1">{currentTrack.title}</h1>
-            <p className="text-muted-foreground truncate">{currentTrack.artist_name}</p>
+            <h1 className="text-3xl font-black truncate mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{currentTrack.title}</h1>
+            <p className="text-base text-muted-foreground truncate font-medium">{currentTrack.artist_name}</p>
           </div>
-          <TrackLikeButton trackId={currentTrack.id} />
+          <TrackLikeButton 
+            trackId={currentTrack.id}
+            trackTitle={currentTrack.title}
+            artistName={currentTrack.artist_name}
+            audioUrl={currentTrack.audio_url}
+            duration={currentTrack.duration}
+            className="scale-125"
+          />
         </div>
       </div>
 
@@ -85,37 +92,37 @@ export default function NowPlaying() {
           onValueChange={handleProgressChange}
           max={100}
           step={0.1}
-          className="w-full"
+          className="w-full [&_.relative]:h-1 [&_[role=slider]]:bg-foreground [&_[role=slider]]:shadow-lg"
         />
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+        <div className="flex justify-between text-xs text-muted-foreground mt-3 font-medium">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(totalTime)}</span>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="px-6 py-4">
+      <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-8 max-w-md mx-auto">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button className="text-muted-foreground hover:text-foreground transition-all hover:scale-110">
             <Shuffle className="w-6 h-6" />
           </button>
-          <button onClick={skipPrevious} className="text-foreground hover:scale-110 transition-transform">
-            <SkipBack className="w-8 h-8" fill="currentColor" />
+          <button onClick={skipPrevious} className="text-foreground hover:scale-110 transition-all">
+            <SkipBack className="w-9 h-9" fill="currentColor" />
           </button>
           <button
             onClick={togglePlay}
-            className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground flex items-center justify-center hover:scale-105 transition-all shadow-premium"
           >
             {isPlaying ? (
-              <Pause className="w-8 h-8" fill="currentColor" />
+              <Pause className="w-10 h-10" fill="currentColor" />
             ) : (
-              <Play className="w-8 h-8 ml-1" fill="currentColor" />
+              <Play className="w-10 h-10 ml-1" fill="currentColor" />
             )}
           </button>
-          <button onClick={skipNext} className="text-foreground hover:scale-110 transition-transform">
-            <SkipForward className="w-8 h-8" fill="currentColor" />
+          <button onClick={skipNext} className="text-foreground hover:scale-110 transition-all">
+            <SkipForward className="w-9 h-9" fill="currentColor" />
           </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button className="text-muted-foreground hover:text-foreground transition-all hover:scale-110">
             <Repeat className="w-6 h-6" />
           </button>
         </div>

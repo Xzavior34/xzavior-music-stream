@@ -15,29 +15,29 @@ export const AlbumCard = ({ title, artist, imageUrl, className }: AlbumCardProps
   return (
     <div
       className={cn(
-        "group relative p-4 rounded-lg bg-card hover:bg-card/80 transition-all duration-300 cursor-pointer",
+        "group relative p-4 rounded-xl bg-gradient-to-b from-card to-card/80 hover:from-card hover:to-muted/30 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:scale-[1.02]",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative mb-4 aspect-square">
+      <div className="relative mb-4 aspect-square overflow-hidden rounded-lg">
         <img
           src={imageUrl}
           alt={title}
-          className="w-full h-full object-cover rounded-lg shadow-lg"
+          className="w-full h-full object-cover shadow-xl transition-transform duration-500 group-hover:scale-110"
         />
         <button
           className={cn(
-            "absolute bottom-2 right-2 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xl transition-all duration-300",
-            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            "absolute bottom-3 right-3 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground flex items-center justify-center shadow-premium transition-all duration-300 hover:scale-110",
+            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
           )}
         >
-          <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+          <Play className="w-6 h-6 ml-0.5" fill="currentColor" />
         </button>
       </div>
       <div>
-        <h3 className="font-semibold text-sm mb-1 truncate">{title}</h3>
+        <h3 className="font-bold text-sm mb-1 truncate group-hover:text-primary transition-colors">{title}</h3>
         <p className="text-xs text-muted-foreground truncate">{artist}</p>
       </div>
     </div>

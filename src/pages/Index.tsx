@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
+import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { musicService } from "@/services/musicService";
 import { deezerApi } from "@/services/deezerApi";
 import { useAudio } from "@/contexts/AudioContext";
@@ -102,23 +103,31 @@ const Index = () => {
                     <div
                       key={track.id}
                       onClick={() => handlePlayTrack(track)}
-                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer group"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gradient-to-r hover:from-muted/60 hover:to-muted/30 cursor-pointer group transition-all"
                     >
-                      <span className="text-sm text-muted-foreground w-6 text-center">
+                      <span className="text-sm font-bold text-primary w-6 text-center">
                         {index + 1}
                       </span>
                       <img
                         src={track.album.cover_medium}
                         alt={track.title}
-                        className="w-12 h-12 rounded flex-shrink-0"
+                        className="w-14 h-14 rounded-md flex-shrink-0 shadow-lg"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate text-sm">{track.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="font-semibold truncate">{track.title}</p>
+                        <p className="text-sm text-muted-foreground truncate">
                           {track.artist.name}
                         </p>
                       </div>
-                      <Play className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      <TrackLikeButton
+                        trackId={track.id.toString()}
+                        trackTitle={track.title}
+                        artistName={track.artist.name}
+                        audioUrl={track.preview}
+                        duration={track.duration}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                      <Play className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-primary" />
                     </div>
                   ))}
                 </div>
