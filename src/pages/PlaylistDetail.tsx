@@ -7,6 +7,7 @@ import { Play, Heart, ArrowLeft } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
 import { toast } from 'sonner';
 import { deezerApi, DeezerPlaylist } from '@/services/deezerApi';
+import { PlaylistTracksList } from '@/components/PlaylistTracksList';
 
 const PlaylistDetail = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const PlaylistDetail = () => {
   const { playTrack, addToQueue } = useAudio();
   const [playlist, setPlaylist] = useState<DeezerPlaylist | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tracks, setTracks] = useState<any[]>([]);
 
   useEffect(() => {
     fetchPlaylistData();
@@ -23,11 +25,17 @@ const PlaylistDetail = () => {
     try {
       const playlistData = await deezerApi.getPlaylist(Number(id));
       setPlaylist(playlistData);
+      setTracks(playlistData.tracks?.data || []);
     } catch (error: any) {
       toast.error('Failed to load playlist');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReorder = (newTracks: any[]) => {
+    setTracks(newTracks);
+    toast.success('Playlist reordered');
   };
 
   const playPlaylist = () => {
@@ -146,35 +154,15 @@ const PlaylistDetail = () => {
             </div>
           </div>
 
-          <div className="space-y-1">
-            {playlist.tracks?.data?.map((track, index) => (
-              <div
-                key={track.id}
-                className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-card transition-colors group cursor-pointer"
-                onClick={() => handlePlayTrack(track)}
-              >
-                <div className="w-6 sm:w-8 text-center text-xs sm:text-sm text-muted-foreground group-hover:hidden flex-shrink-0">
-                  {index + 1}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-6 h-6 sm:w-8 sm:h-8 p-0 hidden group-hover:flex items-center justify-center flex-shrink-0"
-                >
-                  <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
-                </Button>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm sm:text-base truncate">{track.title}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist.name}</div>
-                </div>
-                <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
-                  {formatDuration(track.duration)}
-                </div>
-              </div>
-            ))}
-          </div>
+          <PlaylistTracksList
+            tracks={tracks}
+            onReorder={handleReorder}
+            onPlayTrack={handlePlayTrack}
+            formatDuration={formatDuration}
+            canReorder={true}
+          />
 
-          {(!playlist.tracks?.data || playlist.tracks.data.length === 0) && (
+          {tracks.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               This playlist is empty
             </div>

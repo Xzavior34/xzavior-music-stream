@@ -4,12 +4,15 @@ import { MobileNav } from "@/components/MobileNav";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
+import { Recommendations } from "@/components/Recommendations";
+import { SongUpload } from "@/components/SongUpload";
 import { musicService } from "@/services/musicService";
 import { deezerApi } from "@/services/deezerApi";
 import { useAudio } from "@/contexts/AudioContext";
 import { Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Album {
   id: string | number;
@@ -29,6 +32,7 @@ interface Playlist {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [trendingTracks, setTrendingTracks] = useState<any[]>([]);
@@ -50,7 +54,7 @@ const Index = () => {
 
       setAlbums(albumsData.slice(0, 12));
       setPlaylists(playlistsData.slice(0, 8));
-      setTrendingTracks(chartData.slice(0, 10));
+      setTrendingTracks(chartData.slice(0, 5));
       
       if (albumsData.length > 0 || playlistsData.length > 0) {
         toast.success('Music loaded successfully');
@@ -93,6 +97,16 @@ const Index = () => {
             </div>
           ) : (
             <>
+              {/* AI Recommendations */}
+              {user && <Recommendations />}
+
+              {/* Song Upload */}
+              {user && (
+                <section className="mb-8 lg:mb-12">
+                  <SongUpload />
+                </section>
+              )}
+
               {/* Trending Songs */}
               <section className="mb-8 lg:mb-12">
                 <div className="flex items-center justify-between mb-4 lg:mb-6">

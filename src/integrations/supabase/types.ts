@@ -105,6 +105,38 @@ export type Database = {
           },
         ]
       }
+      listening_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          played_at: string | null
+          track_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          played_at?: string | null
+          track_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          played_at?: string | null
+          track_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listening_history_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlist_tracks: {
         Row: {
           added_at: string | null
@@ -214,6 +246,7 @@ export type Database = {
           duration: number
           id: string
           title: string
+          uploaded_by: string | null
         }
         Insert: {
           album_id?: string | null
@@ -224,6 +257,7 @@ export type Database = {
           duration: number
           id?: string
           title: string
+          uploaded_by?: string | null
         }
         Update: {
           album_id?: string | null
@@ -234,6 +268,7 @@ export type Database = {
           duration?: number
           id?: string
           title?: string
+          uploaded_by?: string | null
         }
         Relationships: [
           {
