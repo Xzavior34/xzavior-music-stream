@@ -7,10 +7,23 @@ import { cn } from "@/lib/utils";
 
 interface TrackLikeButtonProps {
   trackId: string;
+  trackTitle?: string;
+  artistName?: string;
+  audioUrl?: string;
+  duration?: number;
+  albumId?: string;
   className?: string;
 }
 
-export const TrackLikeButton = ({ trackId, className }: TrackLikeButtonProps) => {
+export const TrackLikeButton = ({ 
+  trackId, 
+  trackTitle, 
+  artistName, 
+  audioUrl, 
+  duration, 
+  albumId,
+  className 
+}: TrackLikeButtonProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -60,6 +73,23 @@ export const TrackLikeButton = ({ trackId, className }: TrackLikeButtonProps) =>
         setIsLiked(false);
         toast.success('Removed from liked songs');
       } else {
+        // First, ensure track exists in tracks table
+        if (trackTitle && artistName && audioUrl && duration) {
+          const { error: trackError } = await supabase
+            .from('tracks')
+            .upsert({
+              id: trackId,
+              title: trackTitle,
+              artist_name: artistName,
+              audio_url: audioUrl,
+              duration: duration,
+              album_id: albumId || null,
+            }, { onConflict: 'id' });
+
+          if (trackError) throw trackError;
+        }
+
+        // Then add to liked tracks
         const { error } = await supabase
           .from('liked_tracks')
           .insert({
