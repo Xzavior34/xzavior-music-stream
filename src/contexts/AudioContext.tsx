@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Track {
   id: string;
@@ -62,12 +63,25 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [volume]);
 
-  const playTrack = (track: Track) => {
+  const playTrack = async (track: Track) => {
     if (audioRef.current) {
       audioRef.current.src = track.audio_url;
       audioRef.current.play();
       setCurrentTrack(track);
       setIsPlaying(true);
+
+      // Log to listening history
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('listening_history').insert({
+            user_id: user.id,
+            track_id: track.id,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to log listening history:', error);
+      }
     }
   };
 
