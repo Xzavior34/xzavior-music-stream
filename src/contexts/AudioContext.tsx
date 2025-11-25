@@ -16,6 +16,8 @@ interface AudioContextType {
   progress: number;
   volume: number;
   queue: Track[];
+  shuffle: boolean;
+  repeat: 'off' | 'all' | 'one';
   playTrack: (track: Track) => void;
   togglePlay: () => void;
   skipNext: () => void;
@@ -26,6 +28,8 @@ interface AudioContextType {
   clearQueue: () => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
   removeFromQueue: (index: number) => void;
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -36,6 +40,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [progress, setProgressState] = useState(0);
   const [volume, setVolumeState] = useState(70);
   const [queue, setQueue] = useState<Track[]>([]);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -99,10 +105,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const skipNext = () => {
-    if (queue.length > 0) {
+    if (repeat === 'one' && currentTrack) {
+      playTrack(currentTrack);
+    } else if (queue.length > 0) {
       const nextTrack = queue[0];
       setQueue(queue.slice(1));
       playTrack(nextTrack);
+    } else if (repeat === 'all' && currentTrack) {
+      playTrack(currentTrack);
     } else {
       setIsPlaying(false);
     }
@@ -144,6 +154,18 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setQueue(queue.filter((_, i) => i !== index));
   };
 
+  const toggleShuffle = () => {
+    setShuffle(!shuffle);
+  };
+
+  const toggleRepeat = () => {
+    setRepeat(prev => {
+      if (prev === 'off') return 'all';
+      if (prev === 'all') return 'one';
+      return 'off';
+    });
+  };
+
   return (
     <AudioContext.Provider
       value={{
@@ -152,6 +174,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         progress,
         volume,
         queue,
+        shuffle,
+        repeat,
         playTrack,
         togglePlay,
         skipNext,
@@ -162,6 +186,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearQueue,
         reorderQueue,
         removeFromQueue,
+        toggleShuffle,
+        toggleRepeat,
       }}
     >
       {children}
