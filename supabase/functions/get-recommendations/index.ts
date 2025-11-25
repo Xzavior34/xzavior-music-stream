@@ -93,14 +93,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a music recommendation expert. Based on user listening data, suggest 10 songs they would love. Return ONLY a JSON array with objects containing: title, artist, genre, reason (brief explanation why they\'d like it).'
+            content: 'You are a music recommendation expert with deep knowledge of music genres, artists, and listener preferences. Analyze user listening patterns to suggest songs they would love. Consider musical elements like tempo, mood, genre, and artist style. Return ONLY a JSON array with objects containing: title, artist, genre, reason (brief explanation why they\'d like it based on their listening habits).'
           },
           {
             role: 'user',
-            content: `Liked songs: ${JSON.stringify(likedSongs.slice(0, 15))}\n\nRecently played: ${JSON.stringify(recentlyPlayed.slice(0, 15))}\n\nRecommend 10 new songs I would love.`
+            content: `Based on this user's music taste:\n\nLiked songs: ${JSON.stringify(likedSongs.slice(0, 15))}\n\nRecently played: ${JSON.stringify(recentlyPlayed.slice(0, 15))}\n\nAnalyze their preferences and recommend 10 songs that match their musical taste. Consider patterns in genres, artists, tempo, and mood. Be specific about why each recommendation fits their profile.`
           }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
       }),
     });
 

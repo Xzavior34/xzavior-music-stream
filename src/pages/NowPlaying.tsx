@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Heart, MoreHorizontal, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause } from "lucide-react";
+import { ChevronDown, Heart, MoreHorizontal, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, Music } from "lucide-react";
 import { useAudio } from "@/contexts/AudioContext";
 import { Slider } from "@/components/ui/slider";
 import { useState, useEffect } from "react";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
+import { LyricsDisplay } from "@/components/LyricsDisplay";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function NowPlaying() {
   const navigate = useNavigate();
@@ -62,9 +64,28 @@ export default function NowPlaying() {
         </div>
       </div>
 
-      {/* Album Art */}
-      <div className="px-6 pt-12 pb-8">
-        <div className="aspect-square w-full max-w-md mx-auto rounded-2xl bg-gradient-to-br from-primary/50 via-primary/30 to-primary/10 shadow-premium animate-pulse" style={{ animationDuration: '3s' }} />
+      {/* Album Art / Lyrics Tabs */}
+      <div className="px-6 pt-8 pb-8">
+        <Tabs defaultValue="cover" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+            <TabsTrigger value="cover">Cover</TabsTrigger>
+            <TabsTrigger value="lyrics">Lyrics</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="cover" className="mt-0">
+            <div className="aspect-square w-full max-w-md mx-auto rounded-2xl bg-gradient-to-br from-primary/50 via-primary/30 to-primary/10 shadow-premium animate-pulse" style={{ animationDuration: '3s' }} />
+          </TabsContent>
+          
+          <TabsContent value="lyrics" className="mt-0">
+            <div className="w-full max-w-md mx-auto h-[400px] rounded-2xl bg-card/50 backdrop-blur border border-border/50 overflow-hidden">
+              <LyricsDisplay 
+                trackId={currentTrack.id} 
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Track Info */}

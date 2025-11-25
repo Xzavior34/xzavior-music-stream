@@ -2,3 +2,6 @@ project_id = "bhfkegnwobdobqwhditb"
 
 [functions.get-recommendations]
 verify_jwt = true
+
+[functions.get-lyrics]
+verify_jwt = false
