@@ -4,9 +4,10 @@ import { useAudio } from "@/contexts/AudioContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Player = () => {
-  const { currentTrack, isPlaying, progress, volume, queue, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress } = useAudio();
+  const { currentTrack, isPlaying, progress, volume, queue, shuffle, repeat, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress, toggleShuffle, toggleRepeat } = useAudio();
   const [localVolume, setLocalVolume] = useState([volume]);
   const [localProgress, setLocalProgress] = useState([progress]);
   const navigate = useNavigate();
@@ -56,7 +57,13 @@ export const Player = () => {
       {/* Controls */}
       <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 max-w-[700px]">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+          <button 
+            onClick={toggleShuffle}
+            className={cn(
+              "text-muted-foreground hover:text-foreground transition-colors hidden sm:block",
+              shuffle && "text-primary"
+            )}
+          >
             <Shuffle className="w-4 h-4" />
           </button>
           <button onClick={skipPrevious} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -72,8 +79,17 @@ export const Player = () => {
           <button onClick={skipNext} className="text-muted-foreground hover:text-foreground transition-colors">
             <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+          <button 
+            onClick={toggleRepeat}
+            className={cn(
+              "text-muted-foreground hover:text-foreground transition-colors hidden sm:flex items-center relative",
+              repeat !== 'off' && "text-primary"
+            )}
+          >
             <Repeat className="w-4 h-4" />
+            {repeat === 'one' && (
+              <span className="absolute -top-1 -right-1 text-[10px] font-bold">1</span>
+            )}
           </button>
         </div>
         <div className="flex items-center gap-1 sm:gap-2 w-full">

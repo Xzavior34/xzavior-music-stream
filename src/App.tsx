@@ -9,6 +9,7 @@ import Premium from "./pages/Premium";
 import Create from "./pages/Create";
 import NowPlaying from "./pages/NowPlaying";
 import Queue from "./pages/Queue";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -23,6 +24,7 @@ const App = () => (
     <Route path="/create" element={<Create />} />
     <Route path="/now-playing" element={<NowPlaying />} />
     <Route path="/queue" element={<Queue />} />
+    <Route path="/install" element={<Install />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
