@@ -24,6 +24,8 @@ interface AudioContextType {
   setProgress: (progress: number) => void;
   addToQueue: (track: Track) => void;
   clearQueue: () => void;
+  reorderQueue: (startIndex: number, endIndex: number) => void;
+  removeFromQueue: (index: number) => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -131,6 +133,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setQueue([]);
   };
 
+  const reorderQueue = (startIndex: number, endIndex: number) => {
+    const result = Array.from(queue);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    setQueue(result);
+  };
+
+  const removeFromQueue = (index: number) => {
+    setQueue(queue.filter((_, i) => i !== index));
+  };
+
   return (
     <AudioContext.Provider
       value={{
@@ -147,6 +160,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setProgress,
         addToQueue,
         clearQueue,
+        reorderQueue,
+        removeFromQueue,
       }}
     >
       {children}

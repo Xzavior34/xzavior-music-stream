@@ -1,12 +1,15 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, ListMusic } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAudio } from "@/contexts/AudioContext";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export const Player = () => {
-  const { currentTrack, isPlaying, progress, volume, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress } = useAudio();
+  const { currentTrack, isPlaying, progress, volume, queue, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress } = useAudio();
   const [localVolume, setLocalVolume] = useState([volume]);
   const [localProgress, setLocalProgress] = useState([progress]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLocalProgress([progress]);
@@ -87,8 +90,21 @@ export const Player = () => {
         </div>
       </div>
 
-      {/* Volume */}
+      {/* Volume & Queue */}
       <div className="hidden lg:flex items-center gap-2 w-[300px] justify-end">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/queue')}
+          className="relative"
+        >
+          <ListMusic className="w-4 h-4" />
+          {queue.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+              {queue.length}
+            </span>
+          )}
+        </Button>
         <Volume2 className="w-4 h-4 text-muted-foreground" />
         <Slider
           value={localVolume}
