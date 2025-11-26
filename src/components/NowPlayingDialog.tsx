@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { QueueDialog } from "@/components/QueueDialog";
 import { LyricsDialog } from "@/components/LyricsDialog";
+import { TrackLikeButton } from "@/components/TrackLikeButton";
 
 interface NowPlayingDialogProps {
   open: boolean;
@@ -67,19 +68,25 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
       <LyricsDialog open={showLyrics} onOpenChange={setShowLyrics} />
       
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg sm:max-w-2xl p-0 gap-0 overflow-hidden bg-gradient-to-br from-background to-muted">
+        <DialogContent className="max-w-lg sm:max-w-2xl p-0 gap-0 overflow-hidden bg-gradient-to-b from-background via-background to-muted/20 h-[100dvh] sm:h-auto">
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-2 sm:right-4 sm:top-4 z-10 h-8 w-8 sm:h-10 sm:w-10"
+            className="absolute left-4 top-4 z-10 h-10 w-10 rounded-full"
             onClick={() => onOpenChange(false)}
           >
-            <X className="w-3 h-3 sm:w-4 sm:h-4" />
+            <X className="w-5 h-5" />
           </Button>
           
-          <div className="flex flex-col items-center p-4 sm:p-8 pt-12 sm:pt-16">
+          <div className="flex flex-col h-full p-6 sm:p-8 pt-16 sm:pt-20">
+            {/* Context Header */}
+            <div className="text-center mb-6 animate-fade-in">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">PLAYING FROM YOUR LIBRARY</p>
+              <h3 className="text-sm font-semibold">Now Playing</h3>
+            </div>
+
             {/* Album Art */}
-            <div className="w-48 h-48 sm:w-72 sm:h-72 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl mb-6 sm:mb-8 animate-scale-in">
+            <div className="w-full max-w-[340px] aspect-square rounded-lg overflow-hidden shadow-2xl mb-8 animate-scale-in mx-auto">
               {currentTrack.image_url ? (
                 <img 
                   src={currentTrack.image_url} 
@@ -92,35 +99,25 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
             </div>
 
             {/* Track Info */}
-            <div className="text-center mb-4 sm:mb-6 w-full animate-fade-in px-4">
-              <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 truncate">{currentTrack.title}</h2>
-              <p className="text-sm sm:text-base text-muted-foreground truncate">{currentTrack.artist_name}</p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLyrics(true)}
-                className="gap-1 sm:gap-2 text-xs sm:text-sm"
-              >
-                <Mic2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Lyrics</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowQueue(true)}
-                className="gap-1 sm:gap-2 text-xs sm:text-sm"
-              >
-                <ListMusic className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Queue</span> ({queue.length})
-              </Button>
+            <div className="w-full mb-8 animate-fade-in px-4">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold mb-2 truncate">{currentTrack.title}</h2>
+                  <p className="text-base text-muted-foreground truncate">{currentTrack.artist_name}</p>
+                </div>
+                <TrackLikeButton
+                  trackId={currentTrack.id}
+                  trackTitle={currentTrack.title}
+                  artistName={currentTrack.artist_name}
+                  audioUrl={currentTrack.audio_url}
+                  duration={currentTrack.duration}
+                  albumId={currentTrack.album_id}
+                />
+              </div>
             </div>
 
           {/* Progress Bar */}
-          <div className="w-full mb-4 sm:mb-6 px-2">
+          <div className="w-full mb-6 px-2">
             <Slider
               value={localProgress}
               onValueChange={handleProgressChange}
@@ -135,7 +132,7 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="flex items-center justify-center gap-6 mb-8">
             <button 
               onClick={toggleShuffle}
               className={cn(
@@ -144,7 +141,7 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               )}
               aria-label="Toggle shuffle"
             >
-              <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Shuffle className="w-5 h-5" />
             </button>
             
             <button 
@@ -152,18 +149,18 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               className="text-foreground hover:scale-110 transition-transform touch-manipulation active:scale-95"
               aria-label="Previous track"
             >
-              <SkipBack className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" />
+              <SkipBack className="w-7 h-7" fill="currentColor" />
             </button>
             
             <button
               onClick={togglePlay}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg touch-manipulation"
+              className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-lg touch-manipulation"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
-                <Pause className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" />
+                <Pause className="w-7 h-7" fill="currentColor" />
               ) : (
-                <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5" fill="currentColor" />
+                <Play className="w-7 h-7 ml-1" fill="currentColor" />
               )}
             </button>
             
@@ -172,7 +169,7 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               className="text-foreground hover:scale-110 transition-transform touch-manipulation active:scale-95"
               aria-label="Next track"
             >
-              <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" />
+              <SkipForward className="w-7 h-7" fill="currentColor" />
             </button>
             
             <button 
@@ -183,11 +180,31 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               )}
               aria-label={`Repeat: ${repeat}`}
             >
-              <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Repeat className="w-5 h-5" />
               {repeat === 'one' && (
                 <span className="absolute -top-1 -right-1 text-[10px] font-bold">1</span>
               )}
             </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-4 mt-auto pb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowQueue(true)}
+              className="gap-2"
+            >
+              <ListMusic className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowLyrics(true)}
+              className="gap-2"
+            >
+              <Mic2 className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </DialogContent>
