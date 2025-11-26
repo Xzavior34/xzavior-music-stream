@@ -13,7 +13,8 @@ import {
   User, 
   Compass, 
   Crown, 
-  LogOut 
+  LogOut,
+  Clock 
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
@@ -127,6 +128,9 @@ export const MobileNav = () => {
                   </Button>
                   <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/library')}>
                       <Heart className="w-5 h-5 text-primary fill-primary" /> Liked Songs
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/history')}>
+                      <Clock className="w-5 h-5" /> History
                   </Button>
                   <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/profile')}>
                       <User className="w-5 h-5" /> Profile
