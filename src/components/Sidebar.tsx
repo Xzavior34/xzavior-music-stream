@@ -76,7 +76,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
                 <span>Profile</span>
               </button>
               
-              <button onClick={() => navigate('/premium')} className={getButtonClass('/premium')}>
+              <button 
+                onClick={() => toast.info('Premium is coming soon')}
+                className={getButtonClass('/premium')}
+              >
                 <Crown className="w-6 h-6 text-yellow-500" />
                 <span>Premium</span>
               </button>

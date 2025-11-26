@@ -131,7 +131,11 @@ export const MobileNav = () => {
                   <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/profile')}>
                       <User className="w-5 h-5" /> Profile
                   </Button>
-                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/premium')}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start gap-4" 
+                    onClick={() => toast.info('Premium is coming soon')}
+                  >
                       <Crown className="w-5 h-5 text-yellow-500" /> Premium
                   </Button>
                 </div>
