@@ -15,6 +15,9 @@ interface TrackLikeButtonProps {
   className?: string;
 }
 
+const isUuid = (id: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 export const TrackLikeButton = ({ 
   trackId, 
   trackTitle, 
@@ -29,13 +32,13 @@ export const TrackLikeButton = ({
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (user && isUuid(trackId)) {
       checkIfLiked();
     }
   }, [user, trackId]);
 
   const checkIfLiked = async () => {
-    if (!user) return;
+    if (!user || !isUuid(trackId)) return;
     
     try {
       const { data, error } = await supabase
@@ -60,6 +63,11 @@ export const TrackLikeButton = ({
       return;
     }
 
+    if (!isUuid(trackId)) {
+      toast.error('Liking this song is not available yet');
+      return;
+    }
+
     setLoading(true);
     try {
       if (isLiked) {
@@ -73,20 +81,31 @@ export const TrackLikeButton = ({
         setIsLiked(false);
         toast.success('Removed from liked songs');
       } else {
-        // First, ensure track exists in tracks table
-        if (trackTitle && artistName && audioUrl && duration) {
-          const { error: trackError } = await supabase
+        // First, ensure track exists in tracks table (only for internal tracks)
+        if (trackTitle && artistName && audioUrl && typeof duration === 'number') {
+          const { data: existingTrack, error: existingError } = await supabase
             .from('tracks')
-            .upsert({
-              id: trackId,
-              title: trackTitle,
-              artist_name: artistName,
-              audio_url: audioUrl,
-              duration: duration,
-              album_id: albumId || null,
-            }, { onConflict: 'id' });
+            .select('id')
+            .eq('id', trackId)
+            .maybeSingle();
 
-          if (trackError) throw trackError;
+          if (existingError) throw existingError;
+
+          if (!existingTrack) {
+            const { error: insertError } = await supabase
+              .from('tracks')
+              .insert({
+                id: trackId,
+                title: trackTitle,
+                artist_name: artistName,
+                audio_url: audioUrl,
+                duration: duration,
+                album_id: albumId || null,
+                uploaded_by: user.id,
+              });
+
+            if (insertError) throw insertError;
+          }
         }
 
         // Then add to liked tracks
