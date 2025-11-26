@@ -8,8 +8,9 @@ import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 import { Recommendations } from "@/components/Recommendations";
 import { musicService } from "@/services/musicService";
-import { deezerApi } from "@/services/deezerApi";
+import { musicApi, UnifiedTrack } from "@/services/musicApi";
 import { useAudio } from "@/contexts/AudioContext";
+import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ const Index = () => {
   const { user } = useAuth();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [trendingTracks, setTrendingTracks] = useState<any[]>([]);
+  const [trendingTracks, setTrendingTracks] = useState<UnifiedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const { playTrack } = useAudio();
 
@@ -56,7 +57,7 @@ const Index = () => {
       const [albumsData, playlistsData, chartData] = await Promise.all([
         musicService.getAlbums(),
         musicService.getPlaylists(),
-        deezerApi.getChart(),
+        musicApi.getChart(),
       ]);
 
       setAlbums(albumsData.slice(0, 12));
@@ -73,13 +74,15 @@ const Index = () => {
     }
   };
 
-  const handlePlayTrack = (track: any) => {
+  const handlePlayTrack = (track: UnifiedTrack) => {
     playTrack({
-      id: track.id.toString(),
+      id: track.id,
       title: track.title,
-      artist_name: track.artist.name,
-      audio_url: track.preview,
+      artist_name: track.artist,
+      audio_url: track.audioUrl,
       duration: track.duration,
+      image_url: track.imageUrl,
+      album_id: track.albumTitle,
     });
   };
 
@@ -126,33 +129,38 @@ const Index = () => {
                         {index + 1}
                       </span>
                       <img
-                        src={track.album.cover_medium}
+                        src={track.imageUrl}
                         alt={track.title}
                         className="w-14 h-14 rounded-md flex-shrink-0 shadow-lg"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{track.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold truncate">{track.title}</p>
+                          {track.isPreview && (
+                            <Badge variant="outline" className="text-[10px] px-1 py-0">Preview</Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground truncate">
-                          {track.artist.name}
+                          {track.artist}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <AddToPlaylistPopover
-                          trackId={track.id.toString()}
+                          trackId={track.id}
                           trackTitle={track.title}
-                          artistName={track.artist.name}
-                          audioUrl={track.preview}
+                          artistName={track.artist}
+                          audioUrl={track.audioUrl}
                           duration={track.duration}
                           isExternalTrack={true}
-                          imageUrl={track.album?.cover_medium}
-                          previewUrl={track.preview}
-                          albumId={track.album?.title}
+                          imageUrl={track.imageUrl}
+                          previewUrl={track.audioUrl}
+                          albumId={track.albumTitle}
                         />
                         <TrackLikeButton
-                          trackId={track.id.toString()}
+                          trackId={track.id}
                           trackTitle={track.title}
-                          artistName={track.artist.name}
-                          audioUrl={track.preview}
+                          artistName={track.artist}
+                          audioUrl={track.audioUrl}
                           duration={track.duration}
                         />
                       </div>

@@ -1,18 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MobileNav } from "@/components/MobileNav";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Play } from "lucide-react";
-import { AlbumCard } from "@/components/AlbumCard";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { useNavigate } from "react-router-dom";
-import { deezerApi, DeezerTrack } from "@/services/deezerApi";
+import { musicApi, UnifiedTrack } from "@/services/musicApi";
 import { toast } from "sonner";
 import { useAudio } from "@/contexts/AudioContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+
+interface UploadedTrack {
+  id: string;
+  title: string;
+  artist_name: string;
+  audio_url: string;
+  duration: number;
+  image_url: string | null;
+  album_id: string | null;
+}
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<DeezerTrack[]>([]);
+  const [searchResults, setSearchResults] = useState<UnifiedTrack[]>([]);
+  const [uploadedResults, setUploadedResults] = useState<UploadedTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { playTrack } = useAudio();
@@ -21,12 +33,23 @@ const Search = () => {
     setSearchQuery(query);
     if (query.trim().length < 2) {
       setSearchResults([]);
+      setUploadedResults([]);
       return;
     }
 
     setLoading(true);
     try {
-      const results = await deezerApi.searchTracks(query);
+      // Search uploaded music from Supabase
+      const { data: uploadedTracks } = await supabase
+        .from('tracks')
+        .select('*')
+        .or(`title.ilike.%${query}%,artist_name.ilike.%${query}%`)
+        .limit(20);
+      
+      setUploadedResults(uploadedTracks || []);
+
+      // Search from API (JioSaavn + Deezer fallback)
+      const results = await musicApi.searchTracks(query);
       setSearchResults(results.slice(0, 20));
     } catch (error) {
       toast.error('Search failed');
@@ -35,14 +58,27 @@ const Search = () => {
     }
   };
 
-  const handlePlayTrack = (track: DeezerTrack) => {
-    // Convert Deezer track to our format
+  const handlePlayTrack = (track: UnifiedTrack) => {
     playTrack({
-      id: track.id.toString(),
+      id: track.id,
       title: track.title,
-      artist_name: track.artist.name,
-      audio_url: track.preview,
+      artist_name: track.artist,
+      audio_url: track.audioUrl,
       duration: track.duration,
+      image_url: track.imageUrl,
+      album_id: track.albumTitle,
+    });
+  };
+
+  const handlePlayUploadedTrack = (track: UploadedTrack) => {
+    playTrack({
+      id: track.id,
+      title: track.title,
+      artist_name: track.artist_name,
+      audio_url: track.audio_url,
+      duration: track.duration,
+      image_url: track.image_url,
+      album_id: track.album_id,
     });
   };
 
@@ -78,93 +114,144 @@ const Search = () => {
             </div>
           )}
 
-          {searchResults.length > 0 && (
+          {(searchResults.length > 0 || uploadedResults.length > 0) && (
             <>
-              {/* Album results */}
-              <section className="mb-8 lg:mb-12">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 lg:mb-6">
-                  Albums for "{searchQuery}"
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
-                  {Array.from(new Map(searchResults.map(track => [track.album.id, track])).values())
-                    .slice(0, 6)
-                    .map((track) => (
+              {/* Uploaded tracks */}
+              {uploadedResults.length > 0 && (
+                <section className="mb-8 lg:mb-12">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 lg:mb-6">
+                    Uploaded Songs
+                  </h2>
+                  <div className="space-y-1 sm:space-y-2">
+                    {uploadedResults.map((track) => (
                       <div
-                        key={track.album.id}
-                        onClick={() => navigate(`/album/${track.album.id}`)}
+                        key={track.id}
+                        className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-card transition-colors group"
                       >
-                        <AlbumCard
-                          title={track.album.title}
-                          artist={track.artist.name}
-                          imageUrl={track.album.cover_xl || track.album.cover_medium}
-                        />
+                        <button
+                          onClick={() => handlePlayUploadedTrack(track)}
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
+                        </button>
+                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded flex-shrink-0 overflow-hidden bg-muted">
+                          {track.image_url ? (
+                            <img
+                              src={track.image_url}
+                              alt={track.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm sm:text-base truncate">{track.title}</div>
+                          <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist_name}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">Uploaded</Badge>
+                          <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
+                            {formatDuration(track.duration)}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <AddToPlaylistPopover
+                              trackId={track.id}
+                              trackTitle={track.title}
+                              artistName={track.artist_name}
+                              audioUrl={track.audio_url}
+                              duration={track.duration}
+                              isExternalTrack={false}
+                              imageUrl={track.image_url}
+                              previewUrl={track.audio_url}
+                              albumId={track.album_id}
+                            />
+                            <TrackLikeButton
+                              trackId={track.id}
+                              trackTitle={track.title}
+                              artistName={track.artist_name}
+                              audioUrl={track.audio_url}
+                              duration={track.duration}
+                              albumId={track.album_id}
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
-                </div>
-              </section>
+                  </div>
+                </section>
+              )}
 
-              {/* Track results */}
-              <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-4 lg:mb-6">
-                  Songs
-                </h2>
-                <div className="space-y-1 sm:space-y-2">
-                  {searchResults.map((track) => (
-                    <div
-                      key={track.id}
-                      className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-card transition-colors group"
-                    >
-                      <button
-                        onClick={() => handlePlayTrack(track)}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              {/* API Track results */}
+              {searchResults.length > 0 && (
+                <section>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 lg:mb-6">
+                    Songs
+                  </h2>
+                  <div className="space-y-1 sm:space-y-2">
+                    {searchResults.map((track) => (
+                      <div
+                        key={track.id}
+                        className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-card transition-colors group"
                       >
-                        <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
-                      </button>
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 rounded flex-shrink-0 overflow-hidden">
-                        <img
-                          src={track.album.cover_medium}
-                          alt={track.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm sm:text-base truncate">{track.title}</div>
-                        <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist.name}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
-                          {formatDuration(track.duration)}
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <AddToPlaylistPopover
-                            trackId={track.id.toString()}
-                            trackTitle={track.title}
-                            artistName={track.artist.name}
-                            audioUrl={track.preview}
-                            duration={track.duration}
-                            isExternalTrack={true}
-                            imageUrl={track.album.cover_medium}
-                            previewUrl={track.preview}
-                            albumId={track.album.title}
-                          />
-                          <TrackLikeButton
-                            trackId={track.id.toString()}
-                            trackTitle={track.title}
-                            artistName={track.artist.name}
-                            audioUrl={track.preview}
-                            duration={track.duration}
-                            albumId={track.album.cover_medium}
+                        <button
+                          onClick={() => handlePlayTrack(track)}
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
+                        </button>
+                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded flex-shrink-0 overflow-hidden">
+                          <img
+                            src={track.imageUrl}
+                            alt={track.title}
+                            className="w-full h-full object-cover"
                           />
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm sm:text-base truncate">{track.title}</div>
+                          <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {track.isPreview && (
+                            <Badge variant="outline" className="text-xs">Deezer Preview</Badge>
+                          )}
+                          {!track.isPreview && track.source === 'jiosaavn' && (
+                            <Badge variant="secondary" className="text-xs">Full Track</Badge>
+                          )}
+                          <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
+                            {formatDuration(track.duration)}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <AddToPlaylistPopover
+                              trackId={track.id}
+                              trackTitle={track.title}
+                              artistName={track.artist}
+                              audioUrl={track.audioUrl}
+                              duration={track.duration}
+                              isExternalTrack={true}
+                              imageUrl={track.imageUrl}
+                              previewUrl={track.audioUrl}
+                              albumId={track.albumTitle}
+                            />
+                            <TrackLikeButton
+                              trackId={track.id}
+                              trackTitle={track.title}
+                              artistName={track.artist}
+                              audioUrl={track.audioUrl}
+                              duration={track.duration}
+                              albumId={track.albumTitle}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              )}
             </>
           )}
 
-          {searchQuery && !loading && searchResults.length === 0 && (
+          {searchQuery && !loading && searchResults.length === 0 && uploadedResults.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               No results found for "{searchQuery}"
             </div>

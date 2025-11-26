@@ -56,15 +56,37 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
 
-    audio.addEventListener('ended', () => {
-      skipNext();
-    });
-
     return () => {
       audio.pause();
       audio.src = '';
     };
   }, []);
+
+  // Handle track end separately to avoid stale closure
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      if (repeat === 'one' && currentTrack) {
+        playTrack(currentTrack);
+      } else if (queue.length > 0) {
+        const nextTrack = queue[0];
+        setQueue(queue.slice(1));
+        playTrack(nextTrack);
+      } else if (repeat === 'all' && currentTrack) {
+        playTrack(currentTrack);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [currentTrack, queue, repeat]);
 
   useEffect(() => {
     if (audioRef.current) {
