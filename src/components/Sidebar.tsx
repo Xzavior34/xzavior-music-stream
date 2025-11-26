@@ -21,71 +21,80 @@ export const Sidebar = ({ className }: SidebarProps) => {
     navigate('/auth');
   };
 
-  const handlePremiumClick = () => {
-    toast.info('Coming Soon', {
-      description: 'Premium features will be available soon!'
-    });
-  };
+  const isActive = (path: string) => location.pathname === path;
 
-  const isHomePage = location.pathname === '/';
+  // Helper to determine button style based on active state
+  const getButtonClass = (path: string) => cn(
+    "flex items-center gap-4 w-full px-4 py-3 rounded-lg transition-colors text-sidebar-foreground",
+    isActive(path) ? "bg-sidebar-accent font-bold" : "hover:bg-sidebar-accent font-semibold"
+  );
 
   return (
     <div className={cn("flex flex-col h-full bg-sidebar border-r border-sidebar-border", className)}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate('/')}>xzavior</h1>
+        <h1 className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate('/')}>
+          xzavior
+        </h1>
       </div>
 
-      <nav className="flex-1 px-3">
+      <nav className="flex-1 px-3 overflow-y-auto">
+        {/* Main Navigation */}
         <div className="space-y-1">
-          <button onClick={() => navigate('/')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+          <button onClick={() => navigate('/')} className={getButtonClass('/')}>
             <Home className="w-6 h-6" />
-            <span className="font-semibold">Home</span>
+            <span>Home</span>
           </button>
-          <button onClick={() => navigate('/search')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+          
+          <button onClick={() => navigate('/search')} className={getButtonClass('/search')}>
             <Search className="w-6 h-6" />
-            <span className="font-semibold">Search</span>
+            <span>Search</span>
           </button>
-          <button onClick={() => navigate('/discover')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+          
+          <button onClick={() => navigate('/discover')} className={getButtonClass('/discover')}>
             <Compass className="w-6 h-6" />
-            <span className="font-semibold">Discover</span>
+            <span>Discover</span>
           </button>
-          {user && (
-            <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-              <Library className="w-6 h-6" />
-              <span className="font-semibold">Your Library</span>
-            </button>
-          )}
         </div>
 
+        {/* User Library & Collection */}
         {user && (
-          <div className="mt-8 space-y-1">
-            <button onClick={() => navigate('/create')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-              <Plus className="w-6 h-6" />
-              <span className="font-semibold">Create Playlist</span>
-            </button>
-            <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-              <Heart className="w-6 h-6 fill-primary text-primary" />
-              <span className="font-semibold">Liked Songs</span>
-            </button>
-            <button onClick={() => navigate('/profile')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-              <User className="w-6 h-6" />
-              <span className="font-semibold">Profile</span>
-            </button>
-            <button onClick={handlePremiumClick} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-              <Crown className="w-6 h-6" />
-              <span className="font-semibold">Premium</span>
-            </button>
+          <div className="mt-8">
+            <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Your Collection
+            </h3>
+            <div className="space-y-1">
+              <button onClick={() => navigate('/create')} className={getButtonClass('/create')}>
+                <Plus className="w-6 h-6" />
+                <span>Create Playlist</span>
+              </button>
+              
+              <button onClick={() => navigate('/library')} className={getButtonClass('/library')}>
+                <Heart className="w-6 h-6 fill-primary text-primary" />
+                <span>Liked Songs</span>
+              </button>
+
+              <button onClick={() => navigate('/profile')} className={getButtonClass('/profile')}>
+                <User className="w-6 h-6" />
+                <span>Profile</span>
+              </button>
+              
+              <button onClick={() => navigate('/premium')} className={getButtonClass('/premium')}>
+                <Crown className="w-6 h-6 text-yellow-500" />
+                <span>Premium</span>
+              </button>
+            </div>
           </div>
         )}
       </nav>
 
-      <div className="px-3 py-2">
-        <ThemeToggle />
-      </div>
-
-      <div className="p-4 border-t border-sidebar-border">
+      {/* Footer / Settings */}
+      <div className="px-3 py-2 border-t border-sidebar-border bg-sidebar/50">
+        <div className="mb-2">
+           <ThemeToggle />
+        </div>
+        
         {user ? (
-          <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start">
+          <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10">
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>
