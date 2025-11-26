@@ -57,6 +57,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
 
+    // Handle audio errors gracefully
+    audio.addEventListener('error', (e) => {
+      console.error('Audio playback error:', e);
+      // Try to skip to next track if current fails
+      if (queue.length > 0) {
+        skipNext();
+      } else {
+        setIsPlaying(false);
+      }
+    });
+
     return () => {
       audio.pause();
       audio.src = '';
@@ -69,17 +80,30 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!audio) return;
 
     const handleEnded = () => {
+      // If repeat one is active, replay the same track
       if (repeat === 'one' && currentTrack) {
-        playTrack(currentTrack);
-      } else if (queue.length > 0) {
-        const nextTrack = queue[0];
-        setQueue(queue.slice(1));
-        playTrack(nextTrack);
-      } else if (repeat === 'all' && currentTrack) {
-        playTrack(currentTrack);
-      } else {
-        setIsPlaying(false);
+        audio.currentTime = 0;
+        audio.play();
+        return;
       }
+      
+      // If there's a queue, play next track
+      if (queue.length > 0) {
+        const nextTrack = queue[0];
+        setQueue(prev => prev.slice(1));
+        playTrack(nextTrack);
+        return;
+      }
+      
+      // If repeat all is active, replay current track
+      if (repeat === 'all' && currentTrack) {
+        audio.currentTime = 0;
+        audio.play();
+        return;
+      }
+      
+      // Otherwise, stop playing
+      setIsPlaying(false);
     };
 
     audio.addEventListener('ended', handleEnded);
@@ -134,14 +158,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const skipNext = () => {
-    if (repeat === 'one' && currentTrack) {
-      playTrack(currentTrack);
-    } else if (queue.length > 0) {
+    // Manual skip should always go to next track if available
+    if (queue.length > 0) {
       const nextTrack = queue[0];
-      setQueue(queue.slice(1));
+      setQueue(prev => prev.slice(1));
       playTrack(nextTrack);
-    } else if (repeat === 'all' && currentTrack) {
+    } else if (currentTrack && (repeat === 'all' || repeat === 'one')) {
+      // If no queue but repeat is on, restart current track
       playTrack(currentTrack);
+    } else {
+      // No queue and no repeat, just stop
+      setIsPlaying(false);
     }
   };
 

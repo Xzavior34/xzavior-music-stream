@@ -1,10 +1,9 @@
-// Unified Music API - JioSaavn (primary) with Deezer fallback
-const JIOSAAVN_BASE = 'https://saavn.dev/api';
-const JIOSAAVN_FALLBACK = 'https://jiosaavn-api-privatecv.vercel.app';
+// Unified Music API - Deezer (primary, reliable)
 const DEEZER_API_BASE = 'https://api.deezer.com';
 const CORS_PROXIES = [
   'https://corsproxy.io/?',
   'https://api.allorigins.win/raw?url=',
+  'https://cors-anywhere.herokuapp.com/',
 ];
 
 let currentProxyIndex = 0;
@@ -47,12 +46,12 @@ export interface UnifiedTrack {
   audioUrl: string;
   imageUrl: string;
   albumTitle?: string;
-  source: 'jiosaavn' | 'deezer';
+  source: 'deezer';
   isPreview: boolean;
 }
 
 export const musicApi = {
-  // Search tracks with primary and fallback
+  // Search tracks using Deezer API
   searchTracks: async (query: string): Promise<UnifiedTrack[]> => {
     if (!query || query.trim().length < 2) {
       return [];
@@ -60,117 +59,12 @@ export const musicApi = {
 
     const trimmedQuery = query.trim();
     
-    // Try JioSaavn primary with extended 15s timeout and retry
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const url = `${JIOSAAVN_BASE}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
-        const data = await fetchWithTimeout(url, 15000);
-      
-        if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
-          const tracks = data.data.results
-            .map((track: any) => {
-              // Validate required fields
-              if (!track.id || !track.name || !track.primaryArtists) {
-                return null;
-              }
-
-              // Get best quality audio URL
-              const audioUrl = track.downloadUrl?.[4]?.url || 
-                             track.downloadUrl?.[3]?.url || 
-                             track.downloadUrl?.[track.downloadUrl?.length - 1]?.url;
-              
-              // Get best quality image
-              const imageUrl = track.image?.[2]?.url || 
-                             track.image?.[1]?.url || 
-                             track.image?.[0]?.url;
-
-              if (!audioUrl) {
-                return null;
-              }
-
-              return {
-                id: track.id,
-                title: track.name,
-                artist: track.primaryArtists,
-                duration: track.duration || 0,
-                audioUrl: audioUrl,
-                imageUrl: imageUrl || '',
-                albumTitle: track.album?.name || '',
-                source: 'jiosaavn' as const,
-                isPreview: false,
-              };
-            })
-            .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
-
-          if (tracks.length > 0) {
-            return tracks;
-          }
-        }
-      } catch (error) {
-        console.warn(`JioSaavn primary attempt ${attempt + 1} failed:`, error);
-        if (attempt === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
-        }
-      }
-    }
-
-    // Try JioSaavn fallback with extended timeout and retry
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const url = `${JIOSAAVN_FALLBACK}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
-        const data = await fetchWithTimeout(url, 15000);
-      
-        if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
-          const tracks = data.data.results
-            .map((track: any) => {
-              if (!track.id || !track.name || !track.primaryArtists) {
-                return null;
-              }
-
-              const audioUrl = track.downloadUrl?.[4]?.url || 
-                             track.downloadUrl?.[3]?.url || 
-                             track.downloadUrl?.[track.downloadUrl?.length - 1]?.url;
-              
-              const imageUrl = track.image?.[2]?.url || 
-                             track.image?.[1]?.url || 
-                             track.image?.[0]?.url;
-
-              if (!audioUrl) {
-                return null;
-              }
-
-              return {
-                id: track.id,
-                title: track.name,
-                artist: track.primaryArtists,
-                duration: track.duration || 0,
-                audioUrl: audioUrl,
-                imageUrl: imageUrl || '',
-                albumTitle: track.album?.name || '',
-                source: 'jiosaavn' as const,
-                isPreview: false,
-              };
-            })
-            .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
-
-          if (tracks.length > 0) {
-            return tracks;
-          }
-        }
-      } catch (error) {
-        console.warn(`JioSaavn fallback attempt ${attempt + 1} failed:`, error);
-        if (attempt === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
-        }
-      }
-    }
-
-    // Final fallback to Deezer
+    // Try Deezer with multiple CORS proxies
     for (let proxyAttempt = 0; proxyAttempt < CORS_PROXIES.length; proxyAttempt++) {
       try {
         const proxy = getCorsProxy();
-        const url = `${DEEZER_API_BASE}/search?q=${encodeURIComponent(trimmedQuery)}&limit=20`;
-        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 8000);
+        const url = `${DEEZER_API_BASE}/search?q=${encodeURIComponent(trimmedQuery)}&limit=30`;
+        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 10000);
         
         if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
           const tracks = data.data
@@ -183,9 +77,9 @@ export const musicApi = {
                 id: track.id.toString(),
                 title: track.title,
                 artist: track.artist.name,
-                duration: track.duration || 0,
+                duration: track.duration || 30,
                 audioUrl: track.preview,
-                imageUrl: track.album?.cover_xl || track.album?.cover_medium || '',
+                imageUrl: track.album?.cover_xl || track.album?.cover_medium || track.album?.cover_big || '',
                 albumTitle: track.album?.title || '',
                 source: 'deezer' as const,
                 isPreview: true,
@@ -198,7 +92,7 @@ export const musicApi = {
           }
         }
       } catch (error) {
-        console.warn(`Deezer attempt ${proxyAttempt + 1} failed:`, error);
+        console.warn(`Deezer search attempt ${proxyAttempt + 1} failed:`, error);
         // Try next proxy
         currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
       }
@@ -213,12 +107,11 @@ export const musicApi = {
 
   // Get trending/chart tracks
   getChart: async (): Promise<UnifiedTrack[]> => {
-    // Try Deezer for trending since JioSaavn doesn't have a direct chart endpoint
     for (let proxyAttempt = 0; proxyAttempt < CORS_PROXIES.length; proxyAttempt++) {
       try {
         const proxy = getCorsProxy();
-        const url = `${DEEZER_API_BASE}/chart/0/tracks?limit=20`;
-        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 8000);
+        const url = `${DEEZER_API_BASE}/chart/0/tracks?limit=30`;
+        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 10000);
         
         if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
           const tracks = data.data
@@ -231,9 +124,9 @@ export const musicApi = {
                 id: track.id.toString(),
                 title: track.title,
                 artist: track.artist.name,
-                duration: track.duration || 0,
+                duration: track.duration || 30,
                 audioUrl: track.preview,
-                imageUrl: track.album?.cover_xl || track.album?.cover_medium || '',
+                imageUrl: track.album?.cover_xl || track.album?.cover_medium || track.album?.cover_big || '',
                 albumTitle: track.album?.title || '',
                 source: 'deezer' as const,
                 isPreview: true,
