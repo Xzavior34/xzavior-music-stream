@@ -1,73 +1,125 @@
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat } from "lucide-react";
 import { useAudio } from "@/contexts/AudioContext";
-import { useState } from "react";
-import { NowPlayingDialog } from "@/components/NowPlayingDialog";
+import { cn } from "@/lib/utils";
 
 export const Player = () => {
-  const { currentTrack, isPlaying, progress, togglePlay } = useAudio();
-  const [showNowPlaying, setShowNowPlaying] = useState(false);
-
+  const {
+    currentTrack,
+    isPlaying,
+    progress,
+    togglePlay,
+    skipNext,
+    skipPrevious,
+    shuffle,
+    repeat,
+    toggleShuffle,
+    toggleRepeat,
+  } = useAudio();
 
   if (!currentTrack) return null;
 
   return (
-    <>
-      <NowPlayingDialog open={showNowPlaying} onOpenChange={setShowNowPlaying} />
-      
-      {/* Desktop Player Bar */}
-      <div 
-        className="hidden lg:block fixed bottom-0 left-0 right-0 z-50 cursor-pointer hover:opacity-90 transition-opacity"
-        onClick={() => setShowNowPlaying(true)}
-      >
-        <div className="bg-primary text-primary-foreground shadow-2xl">
-          <div className="flex items-center justify-between px-6 h-20">
-            <div className="flex items-center gap-4 overflow-hidden flex-1 max-w-md">
-              <div className="w-14 h-14 rounded-md flex-shrink-0 overflow-hidden shadow-lg">
-                {currentTrack.image_url ? (
-                  <img 
-                    src={currentTrack.image_url} 
-                    alt={currentTrack.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center">
-                    <Play className="w-6 h-6 opacity-50" />
-                  </div>
-                )}
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/40 bg-background/95 backdrop-blur-xl">
+      <div className="mx-auto max-w-5xl px-3 sm:px-4 py-2 flex items-center gap-3 sm:gap-4">
+        {/* Artwork + info */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
+            {currentTrack.image_url ? (
+              <img
+                src={currentTrack.image_url}
+                alt={currentTrack.title}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/40 to-primary/10">
+                <Play className="h-5 w-5 text-primary-foreground/70" />
               </div>
-              <div className="flex flex-col truncate flex-1">
-                <span className="font-semibold truncate text-base">{currentTrack.title}</span>
-                <span className="text-sm opacity-80 truncate">{currentTrack.artist_name}</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePlay();
-                }}
-                className="hover:scale-110 active:scale-95 transition-transform touch-manipulation"
-                aria-label={isPlaying ? "Pause" : "Play"}
-              >
-                {isPlaying ? (
-                  <Pause className="w-7 h-7" fill="currentColor" />
-                ) : (
-                  <Play className="w-7 h-7 ml-0.5" fill="currentColor" />
-                )}
-              </button>
-            </div>
+            )}
           </div>
-          
-          {/* Progress Bar */}
-          <div className="h-1 bg-white/20 w-full">
-            <div 
-              className="h-full bg-white transition-all duration-300 ease-linear" 
-              style={{ width: `${progress}%` }} 
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold sm:text-base">
+              {currentTrack.title}
+            </p>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">
+              {currentTrack.artist_name}
+            </p>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={toggleShuffle}
+              className={cn(
+                "hidden sm:inline-flex text-muted-foreground hover:text-foreground transition-colors",
+                shuffle && "text-primary"
+              )}
+              aria-label="Toggle shuffle"
+            >
+              <Shuffle className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={skipPrevious}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Previous track"
+            >
+              <SkipBack className="h-5 w-5" />
+            </button>
+
+            <button
+              onClick={togglePlay}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-transform"
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5 translate-x-[1px]" />
+              )}
+            </button>
+
+            <button
+              onClick={skipNext}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Next track"
+            >
+              <SkipForward className="h-5 w-5" />
+            </button>
+
+            <button
+              onClick={toggleRepeat}
+              className={cn(
+                "hidden sm:inline-flex text-muted-foreground hover:text-foreground transition-colors relative",
+                repeat !== "off" && "text-primary"
+              )}
+              aria-label={`Repeat: ${repeat}`}
+            >
+              <Repeat className="h-4 w-4" />
+              {repeat === "one" && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-semibold">1</span>
+              )}
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div className="hidden sm:block w-44 md:w-64 h-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-200 ease-linear"
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
       </div>
-    </>
+
+      {/* Mobile progress bar */}
+      <div className="sm:hidden h-1 w-full bg-muted">
+        <div
+          className="h-full bg-primary transition-all duration-200 ease-linear"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
   );
 };
