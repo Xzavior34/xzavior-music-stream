@@ -1,4 +1,5 @@
-import { Sidebar } from "@/components/Sidebar"; // Kept for logic, but hidden in layout
+// Sidebar import kept for consistency, but not rendered in layout to match Index
+import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,10 @@ import { Button } from "@/components/ui/button";
 export default function Premium() {
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar hidden to match the app's full-width design */}
+      {/* Sidebar hidden to match Index/Library layout */}
       {/* <Sidebar /> */}
       
-      {/* Removed lg:ml-64 so the content is centered and full width */}
+      {/* Removed lg:ml-64 to make it full width */}
       <main className="flex-1 w-full pb-32 lg:pb-24">
         <MobileNav />
         
