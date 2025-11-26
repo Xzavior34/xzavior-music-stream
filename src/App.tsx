@@ -12,6 +12,7 @@ import Queue from "./pages/Queue";
 import Install from "./pages/Install";
 import Profile from "./pages/Profile";
 import Discover from "./pages/Discover";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -26,6 +27,7 @@ const App = () => (
     <Route path="/premium" element={<Premium />} />
     <Route path="/create" element={<Create />} />
     <Route path="/profile" element={<Profile />} />
+    <Route path="/history" element={<History />} />
     <Route path="/now-playing" element={<NowPlaying />} />
     <Route path="/queue" element={<Queue />} />
     <Route path="/install" element={<Install />} />

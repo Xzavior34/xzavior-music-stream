@@ -1,4 +1,4 @@
-import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown, User, Compass } from "lucide-react";
+import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown, User, Compass, Clock } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -69,6 +69,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
               <button onClick={() => navigate('/library')} className={getButtonClass('/library')}>
                 <Heart className="w-6 h-6 fill-primary text-primary" />
                 <span>Liked Songs</span>
+              </button>
+
+              <button onClick={() => navigate('/history')} className={getButtonClass('/history')}>
+                <Clock className="w-6 h-6" />
+                <span>History</span>
               </button>
 
               <button onClick={() => navigate('/profile')} className={getButtonClass('/profile')}>
