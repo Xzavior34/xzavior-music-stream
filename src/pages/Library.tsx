@@ -70,10 +70,21 @@ interface HistoryTrack {
   play_count: number;
 }
 
+interface UploadedTrack {
+  id: string;
+  title: string;
+  artist_name: string;
+  audio_url: string;
+  duration: number;
+  image_url: string | null;
+  created_at: string;
+}
+
 export default function Library() {
   const [likedTracks, setLikedTracks] = useState<CombinedTrack[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [history, setHistory] = useState<HistoryTrack[]>([]);
+  const [uploadedTracks, setUploadedTracks] = useState<UploadedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { playTrack } = useAudio();
@@ -87,6 +98,7 @@ export default function Library() {
     fetchLikedTracks();
     fetchPlaylists();
     fetchHistory();
+    fetchUploadedTracks();
   }, [user, navigate]);
 
   // Real-time subscriptions
@@ -94,6 +106,7 @@ export default function Library() {
   useRealtimeSubscription('liked_external_tracks', ['liked_external_tracks'], user?.id);
   useRealtimeSubscription('playlists', ['playlists'], user?.id);
   useRealtimeSubscription('listening_history', ['listening_history'], user?.id);
+  useRealtimeSubscription('tracks', ['tracks'], user?.id);
 
   const fetchLikedTracks = async () => {
     try {
@@ -201,8 +214,10 @@ export default function Library() {
   };
 
   const fetchHistory = async () => {
+    if (!user) return;
+
     try {
-      const { data, error } = await supabase
+      const { data: historyData, error } = await supabase
         .from('listening_history')
         .select(`
           id,
@@ -211,30 +226,32 @@ export default function Library() {
             id,
             title,
             artist_name,
-            audio_url,
             duration,
+            audio_url,
             image_url
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('played_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-
-      // Group by track and count plays
-      const trackMap = new Map<string, HistoryTrack>();
-      data?.forEach((item: any) => {
-        if (item.tracks) {
+      
+      // Transform to match HistoryTrack interface
+      const transformedHistory: HistoryTrack[] = (historyData || [])
+        .filter((item: any) => item.tracks)
+        .reduce((acc: HistoryTrack[], item: any) => {
           const track = item.tracks;
-          const existing = trackMap.get(track.id);
-          if (existing) {
-            existing.play_count++;
-            if (new Date(item.played_at) > new Date(existing.played_at)) {
-              existing.played_at = item.played_at;
+          const existingTrack = acc.find(t => t.id === track.id);
+          
+          if (existingTrack) {
+            existingTrack.play_count += 1;
+            // Keep the most recent played_at
+            if (new Date(item.played_at) > new Date(existingTrack.played_at)) {
+              existingTrack.played_at = item.played_at;
             }
           } else {
-            trackMap.set(track.id, {
+            acc.push({
               id: track.id,
               title: track.title,
               artist_name: track.artist_name,
@@ -245,12 +262,27 @@ export default function Library() {
               play_count: 1,
             });
           }
-        }
-      });
-
-      setHistory(Array.from(trackMap.values()));
+          
+          return acc;
+        }, []);
+      
+      setHistory(transformedHistory);
     } catch (error) {
       console.error('Error fetching history:', error);
+    }
+  };
+
+  const fetchUploadedTracks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUploadedTracks(data || []);
+    } catch (error) {
+      console.error('Error fetching uploaded tracks:', error);
     }
   };
 
@@ -287,6 +319,7 @@ export default function Library() {
             <TabsList className="mb-6">
               <TabsTrigger value="songs">Liked Songs</TabsTrigger>
               <TabsTrigger value="playlists">Playlists</TabsTrigger>
+              <TabsTrigger value="uploaded">Uploaded</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
 
@@ -407,6 +440,86 @@ export default function Library() {
                       {playlist.description && (
                         <p className="text-sm text-muted-foreground truncate">{playlist.description}</p>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="uploaded">
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                </div>
+              ) : uploadedTracks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Music className="w-16 h-16 text-muted-foreground mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">No uploaded songs yet</h2>
+                  <p className="text-muted-foreground mb-6">Go to Create to upload your music</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {uploadedTracks.map((track, index) => (
+                    <div
+                      key={track.id}
+                      onClick={() => playTrack({
+                        id: track.id,
+                        title: track.title,
+                        artist_name: track.artist_name,
+                        audio_url: track.audio_url,
+                        duration: track.duration,
+                        image_url: track.image_url || undefined,
+                      })}
+                      className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-muted/50 cursor-pointer group active:scale-[0.98] transition-all"
+                    >
+                      <span className="text-sm text-muted-foreground w-6 sm:w-8 text-center hidden sm:block">
+                        {index + 1}
+                      </span>
+                      
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                        {track.image_url ? (
+                          <img 
+                            src={track.image_url} 
+                            alt={track.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center">
+                            <Music className="w-6 h-6 text-primary/60" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm sm:text-base truncate">{track.title}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist_name}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          {formatDuration(track.duration)}
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <AddToPlaylistPopover
+                            trackId={track.id}
+                            trackTitle={track.title}
+                            artistName={track.artist_name}
+                            audioUrl={track.audio_url}
+                            duration={track.duration}
+                            isExternalTrack={false}
+                            imageUrl={track.image_url || undefined}
+                            previewUrl={track.audio_url}
+                          />
+                          <TrackLikeButton
+                            trackId={track.id}
+                            trackTitle={track.title}
+                            artistName={track.artist_name}
+                            audioUrl={track.audio_url}
+                            duration={track.duration}
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
