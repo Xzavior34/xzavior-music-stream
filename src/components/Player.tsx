@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, ListMusic, Plus } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAudio } from "@/contexts/AudioContext";
 import { useEffect, useState } from "react";
@@ -122,19 +122,9 @@ export const Player = () => {
             previewUrl={currentTrack.audio_url}
           />
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/queue')}
-          className="relative"
-        >
-          <ListMusic className="w-4 h-4" />
-          {queue.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-              {queue.length}
-            </span>
-          )}
-        </Button>
+        <div className="text-xs text-muted-foreground">
+          Queue: {queue.length}
+        </div>
         <Volume2 className="w-4 h-4 text-muted-foreground" />
         <Slider
           value={localVolume}
