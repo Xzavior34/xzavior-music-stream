@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { Button } from '@/components/ui/button';
-import { Play, Heart, ArrowLeft, Music } from 'lucide-react';
+import { Play, Heart, ArrowLeft, Music, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
 import { toast } from 'sonner';
 import { deezerApi, DeezerPlaylist } from '@/services/deezerApi';
@@ -11,6 +11,23 @@ import { PlaylistTracksList } from '@/components/PlaylistTracksList';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AddToPlaylistPopover } from '@/components/AddToPlaylistPopover';
+import { PlaylistEditDialog } from '@/components/PlaylistEditDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface UserPlaylist {
   id: string;
@@ -41,6 +58,9 @@ const PlaylistDetail = () => {
   const [loading, setLoading] = useState(true);
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [isUserPlaylist, setIsUserPlaylist] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchPlaylistData();
@@ -192,6 +212,40 @@ const PlaylistDetail = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleDeletePlaylist = async () => {
+    if (!playlist || !isUserPlaylist || !('user_id' in playlist)) return;
+
+    setDeleting(true);
+    try {
+      const playlistId = playlist.id as string;
+      
+      // Delete playlist tracks first
+      await supabase
+        .from('playlist_tracks')
+        .delete()
+        .eq('playlist_id', playlistId);
+
+      // Delete the playlist
+      const { error } = await supabase
+        .from('playlists')
+        .delete()
+        .eq('id', playlistId);
+
+      if (error) throw error;
+
+      toast.success('Playlist deleted successfully');
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error deleting playlist:', error);
+      toast.error(error.message || 'Failed to delete playlist');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const isOwnPlaylist = isUserPlaylist && user && 'user_id' in playlist && playlist.user_id === user.id;
+
   if (loading) {
     return (
       <div className="flex h-screen overflow-hidden">
@@ -280,6 +334,30 @@ const PlaylistDetail = () => {
                 <Button variant="outline" size="lg" className="rounded-full p-3">
                   <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
+                
+                {/* Edit/Delete options for own playlists */}
+                {isOwnPlaylist && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="lg" className="rounded-full p-3">
+                        <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit Playlist
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setDeleteDialogOpen(true)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Playlist
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
           </div>
@@ -334,6 +412,43 @@ const PlaylistDetail = () => {
           )}
         </div>
       </main>
+
+      {/* Edit Dialog */}
+      {isOwnPlaylist && playlist && 'user_id' in playlist && (
+        <PlaylistEditDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          playlist={{
+            id: playlist.id,
+            title: playlist.title,
+            description: playlist.description || null,
+            image_url: playlist.image_url || null,
+          }}
+          onUpdate={fetchPlaylistData}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Playlist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{playlist?.title}" and all its tracks. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePlaylist}
+              disabled={deleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
