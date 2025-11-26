@@ -143,6 +143,10 @@ const Index = () => {
                           artistName={track.artist.name}
                           audioUrl={track.preview}
                           duration={track.duration}
+                          isExternalTrack={true}
+                          imageUrl={track.album?.cover_medium}
+                          previewUrl={track.preview}
+                          albumId={track.album?.title}
                         />
                         <TrackLikeButton
                           trackId={track.id.toString()}

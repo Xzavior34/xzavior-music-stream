@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Premium() {
   return (
@@ -42,7 +43,11 @@ export default function Premium() {
                   <span>Unlimited skips</span>
                 </div>
               </div>
-              <Button className="mt-8 w-full max-w-xs" size="lg">
+              <Button 
+                className="mt-8 w-full max-w-xs" 
+                size="lg"
+                onClick={() => toast.info('Premium is coming soon!')}
+              >
                 Get Premium
               </Button>
             </div>
