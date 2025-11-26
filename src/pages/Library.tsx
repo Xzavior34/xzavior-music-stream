@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
+// Removed Sidebar import
 import { MobileNav } from "@/components/MobileNav";
 import { useAudio } from "@/contexts/AudioContext";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
@@ -91,9 +91,10 @@ export default function Library() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
+      {/* Sidebar component removed */}
       
-      <main className="flex-1 lg:ml-64 pb-32 lg:pb-24">
+      {/* Removed lg:ml-64 to make it full width on all screens */}
+      <main className="flex-1 w-full pb-32 lg:pb-24">
         <MobileNav />
         
         <div className="pt-16 lg:pt-8 px-4 lg:px-8">
