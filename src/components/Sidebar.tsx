@@ -1,4 +1,4 @@
-import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown, User, Compass, Clock, List } from "lucide-react";
+import { Home, Search, Library, Plus, Heart, LogOut, LogIn, User, List } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -83,45 +83,24 @@ export const Sidebar = ({ className }: SidebarProps) => {
               <span>Search</span>
             </button>
             
-            <button onClick={() => navigate('/discover')} className={getButtonClass('/discover')}>
-              <Compass className="w-6 h-6" />
-              <span>Discover</span>
+            <button onClick={() => navigate('/library')} className={getButtonClass('/library')}>
+              <Library className="w-6 h-6" />
+              <span>Library</span>
             </button>
           </div>
 
           {user && (
             <>
-              <div className="mt-8">
-                <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Your Collection
-                </h3>
+              <div className="mt-6">
                 <div className="space-y-1">
                   <button onClick={() => navigate('/create')} className={getButtonClass('/create')}>
                     <Plus className="w-6 h-6" />
-                    <span>Create Playlist</span>
-                  </button>
-                  
-                  <button onClick={() => navigate('/library')} className={getButtonClass('/library')}>
-                    <Heart className="w-6 h-6 fill-primary text-primary" />
-                    <span>Liked Songs</span>
-                  </button>
-
-                  <button onClick={() => navigate('/history')} className={getButtonClass('/history')}>
-                    <Clock className="w-6 h-6" />
-                    <span>History</span>
+                    <span>Create</span>
                   </button>
 
                   <button onClick={() => navigate('/profile')} className={getButtonClass('/profile')}>
                     <User className="w-6 h-6" />
                     <span>Profile</span>
-                  </button>
-                  
-                  <button 
-                    onClick={() => toast.info('Premium is coming soon')}
-                    className={getButtonClass('/premium')}
-                  >
-                    <Crown className="w-6 h-6 text-yellow-500" />
-                    <span>Premium</span>
                   </button>
                 </div>
               </div>

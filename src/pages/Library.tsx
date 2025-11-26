@@ -59,9 +59,21 @@ interface Playlist {
   created_at: string;
 }
 
+interface HistoryTrack {
+  id: string;
+  title: string;
+  artist_name: string;
+  audio_url: string;
+  duration: number;
+  image_url: string | null;
+  played_at: string;
+  play_count: number;
+}
+
 export default function Library() {
   const [likedTracks, setLikedTracks] = useState<CombinedTrack[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [history, setHistory] = useState<HistoryTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { playTrack } = useAudio();
@@ -74,12 +86,14 @@ export default function Library() {
     }
     fetchLikedTracks();
     fetchPlaylists();
+    fetchHistory();
   }, [user, navigate]);
 
   // Real-time subscriptions
   useRealtimeSubscription('liked_tracks', ['liked_tracks'], user?.id);
   useRealtimeSubscription('liked_external_tracks', ['liked_external_tracks'], user?.id);
   useRealtimeSubscription('playlists', ['playlists'], user?.id);
+  useRealtimeSubscription('listening_history', ['listening_history'], user?.id);
 
   const fetchLikedTracks = async () => {
     try {
@@ -186,10 +200,79 @@ export default function Library() {
     }
   };
 
+  const fetchHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('listening_history')
+        .select(`
+          id,
+          played_at,
+          tracks (
+            id,
+            title,
+            artist_name,
+            audio_url,
+            duration,
+            image_url
+          )
+        `)
+        .eq('user_id', user?.id)
+        .order('played_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Group by track and count plays
+      const trackMap = new Map<string, HistoryTrack>();
+      data?.forEach((item: any) => {
+        if (item.tracks) {
+          const track = item.tracks;
+          const existing = trackMap.get(track.id);
+          if (existing) {
+            existing.play_count++;
+            if (new Date(item.played_at) > new Date(existing.played_at)) {
+              existing.played_at = item.played_at;
+            }
+          } else {
+            trackMap.set(track.id, {
+              id: track.id,
+              title: track.title,
+              artist_name: track.artist_name,
+              audio_url: track.audio_url,
+              duration: track.duration,
+              image_url: track.image_url,
+              played_at: item.played_at,
+              play_count: 1,
+            });
+          }
+        }
+      });
+
+      setHistory(Array.from(trackMap.values()));
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    }
+  };
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const now = new Date();
+    const played = new Date(timestamp);
+    const diffMs = now.getTime() - played.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return played.toLocaleDateString();
   };
 
   return (
@@ -204,6 +287,7 @@ export default function Library() {
             <TabsList className="mb-6">
               <TabsTrigger value="songs">Liked Songs</TabsTrigger>
               <TabsTrigger value="playlists">Playlists</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
 
             <TabsContent value="songs">{loading ? (
@@ -323,6 +407,63 @@ export default function Library() {
                       {playlist.description && (
                         <p className="text-sm text-muted-foreground truncate">{playlist.description}</p>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="history">
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                </div>
+              ) : history.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Clock className="w-16 h-16 text-muted-foreground mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">No history yet</h2>
+                  <p className="text-muted-foreground mb-6">Songs you play will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {history.map((track) => (
+                    <div
+                      key={track.id}
+                      onClick={() => playTrack({
+                        id: track.id,
+                        title: track.title,
+                        artist_name: track.artist_name,
+                        audio_url: track.audio_url,
+                        duration: track.duration,
+                        image_url: track.image_url || undefined,
+                      })}
+                      className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-muted/50 cursor-pointer group active:scale-[0.98] transition-all"
+                    >
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                        {track.image_url ? (
+                          <img 
+                            src={track.image_url} 
+                            alt={track.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center">
+                            <Music className="w-6 h-6 text-primary/60" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm sm:text-base truncate">{track.title}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist_name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {track.play_count} {track.play_count === 1 ? 'play' : 'plays'} • {formatTimestamp(track.played_at)}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {formatDuration(track.duration)}
+                      </div>
                     </div>
                   ))}
                 </div>

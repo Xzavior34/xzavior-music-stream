@@ -9,12 +9,8 @@ import {
   Heart, 
   MonitorSpeaker, 
   Plus, 
-  Sparkles, 
   User, 
-  Compass, 
-  Crown, 
-  LogOut,
-  Clock 
+  LogOut
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
@@ -52,7 +48,6 @@ export const MobileNav = () => {
     { path: '/', label: 'Home', Icon: Home },
     { path: '/search', label: 'Search', Icon: Search },
     { path: '/library', label: 'Library', Icon: Library },
-    { path: '/premium', label: 'Premium', Icon: Sparkles },
     { path: '/create', label: 'Create', Icon: Plus },
   ];
 
@@ -104,43 +99,27 @@ export const MobileNav = () => {
         {/* SCROLLABLE MENU CONTENT */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
             {/* Section 1: Main */}
-            <div className="space-y-1 mb-8">
+            <div className="space-y-1 mb-6">
                 <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/')}>
                     <Home className="w-5 h-5" /> Home
                 </Button>
                 <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/search')}>
                     <Search className="w-5 h-5" /> Search
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/discover')}>
-                    <Compass className="w-5 h-5" /> Discover
+                <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/library')}>
+                    <Library className="w-5 h-5" /> Library
                 </Button>
             </div>
 
-            {/* Section 2: Collection */}
+            {/* Section 2: User Actions */}
             {user && (
               <div>
-                <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Your Collection
-                </h3>
                 <div className="space-y-1">
                   <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/create')}>
-                      <Plus className="w-5 h-5" /> Create Playlist
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/library')}>
-                      <Heart className="w-5 h-5 text-primary fill-primary" /> Liked Songs
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/history')}>
-                      <Clock className="w-5 h-5" /> History
+                      <Plus className="w-5 h-5" /> Create
                   </Button>
                   <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/profile')}>
                       <User className="w-5 h-5" /> Profile
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start gap-4" 
-                    onClick={() => toast.info('Premium is coming soon')}
-                  >
-                      <Crown className="w-5 h-5 text-yellow-500" /> Premium
                   </Button>
                 </div>
               </div>
@@ -164,7 +143,6 @@ export const MobileNav = () => {
       {/* --- FLOATING MINI PLAYER --- */}
       {currentTrack && (
         <div 
-          onClick={() => navigate('/now-playing')}
           className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-lg shadow-lg overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center justify-between p-3 h-16">
@@ -177,9 +155,7 @@ export const MobileNav = () => {
                 <span className="text-xs opacity-90 truncate">{currentTrack.artist_name}</span>
               </div>
             </div>
-            <div className="flex items-center gap-4 pl-3">
-              <MonitorSpeaker className="w-5 h-5 opacity-80" />
-              <Heart className="w-5 h-5 opacity-80" />
+            <div className="flex items-center gap-2 pl-3">
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
