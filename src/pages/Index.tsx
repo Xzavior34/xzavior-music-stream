@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+// Sidebar import is kept for logic availability if needed, but not rendered in layout
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { AlbumCard } from "@/components/AlbumCard";
@@ -84,11 +85,14 @@ const Index = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
-      <MobileNav />
+      {/* Sidebar hidden/removed to ensure full width on all screens */}
+      {/* <Sidebar className="hidden lg:flex w-64 flex-shrink-0" /> */}
       
-      <main className="flex-1 overflow-y-auto pb-[140px] lg:pb-24 pt-[65px] lg:pt-0">
-        <div className="p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 w-full overflow-y-auto pb-[140px] lg:pb-24">
+        {/* MobileNav handles the top bar and profile/menu click events */}
+        <MobileNav />
+        
+        <div className="pt-[65px] lg:pt-8 p-4 sm:p-6 lg:p-8">
           {/* Welcome Section */}
           <div className="mb-8 lg:mb-12">
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">Good evening</h1>
