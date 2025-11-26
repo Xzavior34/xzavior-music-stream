@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { Play, Music } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,22 +11,30 @@ interface AlbumCardProps {
 
 export const AlbumCard = ({ title, artist, imageUrl, className }: AlbumCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div
       className={cn(
-        "group relative p-4 rounded-xl bg-gradient-to-b from-card to-card/80 hover:from-card hover:to-muted/30 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:scale-[1.02]",
+        "group relative p-4 rounded-xl bg-gradient-to-b from-card to-card/80 hover:from-card hover:to-muted/30 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:scale-[1.02] animate-fade-in",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative mb-4 aspect-square overflow-hidden rounded-lg">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-full object-cover shadow-xl transition-transform duration-500 group-hover:scale-110"
-        />
+      <div className="relative mb-4 aspect-square overflow-hidden rounded-lg bg-muted">
+        {!imageError && imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover shadow-xl transition-transform duration-500 group-hover:scale-110"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center">
+            <Music className="w-16 h-16 text-primary/60" />
+          </div>
+        )}
         <button
           className={cn(
             "absolute bottom-3 right-3 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-glow text-primary-foreground flex items-center justify-center shadow-premium transition-all duration-300 hover:scale-110",

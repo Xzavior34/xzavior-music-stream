@@ -127,11 +127,21 @@ const Index = () => {
                       <span className="text-sm font-bold text-primary w-6 text-center">
                         {index + 1}
                       </span>
-                      <img
-                        src={track.imageUrl}
-                        alt={track.title}
-                        className="w-14 h-14 rounded-md flex-shrink-0 shadow-lg"
-                      />
+                      <div className="w-14 h-14 rounded-md flex-shrink-0 overflow-hidden shadow-lg bg-muted">
+                        {track.imageUrl ? (
+                          <img
+                            src={track.imageUrl}
+                            alt={track.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10"></div>';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold truncate">{track.title}</p>
