@@ -40,17 +40,17 @@ export const MobileNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Helper for Sidebar links to close menu on click
+  // Helper to navigate and close the menu
   const handleNavClick = (path: string) => {
     navigate(path);
     setIsOpen(false);
   };
 
-  // Define the bottom nav links to match Spotify mobile
+  // Bottom Navigation Bar items
   const navLinks = [
     { path: '/', label: 'Home', Icon: Home },
     { path: '/search', label: 'Search', Icon: Search },
-    { path: '/library', label: 'Your Library', Icon: Library },
+    { path: '/library', label: 'Library', Icon: Library },
     { path: '/premium', label: 'Premium', Icon: Sparkles },
     { path: '/create', label: 'Create', Icon: Plus },
   ];
@@ -61,7 +61,7 @@ export const MobileNav = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm pt-3 pb-2 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Profile Icon (Triggers Sidebar) */}
+            {/* Profile Icon (Triggers Sidebar Menu) */}
             <button 
               onClick={() => setIsOpen(true)}
               className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm"
@@ -86,7 +86,7 @@ export const MobileNav = () => {
         />
       )}
 
-      {/* --- SLIDE-OUT SIDEBAR --- */}
+      {/* --- SLIDE-OUT SIDEBAR MENU --- */}
       <div
         className={cn(
           "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-sidebar border-r border-sidebar-border transition-transform duration-300 flex flex-col",
@@ -100,8 +100,9 @@ export const MobileNav = () => {
             </Button>
         </div>
 
+        {/* SCROLLABLE MENU CONTENT */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
-            {/* Main Navigation */}
+            {/* Section 1: Main */}
             <div className="space-y-1 mb-8">
                 <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/')}>
                     <Home className="w-5 h-5" /> Home
@@ -114,7 +115,7 @@ export const MobileNav = () => {
                 </Button>
             </div>
 
-            {/* Your Collection Section */}
+            {/* Section 2: Collection */}
             {user && (
               <div>
                 <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -138,7 +139,7 @@ export const MobileNav = () => {
             )}
         </div>
             
-        {/* Footer */}
+        {/* Footer: Sign Out */}
         <div className="p-4 border-t border-sidebar-border">
              {user ? (
                <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10 gap-2">
@@ -160,7 +161,6 @@ export const MobileNav = () => {
         >
           <div className="flex items-center justify-between p-3 h-16">
             <div className="flex items-center gap-3 overflow-hidden flex-1">
-              {/* Album Art */}
               <div className="w-12 h-12 bg-black/20 rounded flex-shrink-0 flex items-center justify-center">
                 <div className="w-10 h-10 rounded bg-gradient-to-br from-white/20 to-white/5" />
               </div>
@@ -187,14 +187,13 @@ export const MobileNav = () => {
               </button>
             </div>
           </div>
-          {/* Progress bar */}
           <div className="h-[3px] bg-white/20 w-full">
             <div className="h-full bg-white transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
 
-      {/* --- BOTTOM NAVIGATION --- */}
+      {/* --- BOTTOM NAVIGATION BAR --- */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border h-[62px]">
         <div className="flex items-center justify-around h-full px-1">
           {navLinks.map(({ path, label, Icon }) => (
@@ -208,7 +207,7 @@ export const MobileNav = () => {
             >
               <Icon 
                 className="w-6 h-6" 
-                fill={isActive(path) && (label === 'Home' || label === 'Your Library') ? 'currentColor' : 'none'}
+                fill={isActive(path) && (label === 'Home' || label === 'Library') ? 'currentColor' : 'none'}
                 strokeWidth={isActive(path) ? 2.5 : 2}
               />
               <span className="text-[10px] font-medium leading-none">{label}</span>
