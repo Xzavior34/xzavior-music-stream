@@ -1,4 +1,4 @@
-import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown } from "lucide-react";
+import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown, User, Compass } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -45,26 +45,38 @@ export const Sidebar = ({ className }: SidebarProps) => {
             <Search className="w-6 h-6" />
             <span className="font-semibold">Search</span>
           </button>
-          <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-            <Library className="w-6 h-6" />
-            <span className="font-semibold">Your Library</span>
+          <button onClick={() => navigate('/discover')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+            <Compass className="w-6 h-6" />
+            <span className="font-semibold">Discover</span>
           </button>
+          {user && (
+            <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <Library className="w-6 h-6" />
+              <span className="font-semibold">Your Library</span>
+            </button>
+          )}
         </div>
 
-        <div className="mt-8 space-y-1">
-          <button onClick={() => navigate('/create')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-            <Plus className="w-6 h-6" />
-            <span className="font-semibold">Create Playlist</span>
-          </button>
-          <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-            <Heart className="w-6 h-6 fill-primary text-primary" />
-            <span className="font-semibold">Liked Songs</span>
-          </button>
-          <button onClick={handlePremiumClick} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-            <Crown className="w-6 h-6" />
-            <span className="font-semibold">Premium</span>
-          </button>
-        </div>
+        {user && (
+          <div className="mt-8 space-y-1">
+            <button onClick={() => navigate('/create')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <Plus className="w-6 h-6" />
+              <span className="font-semibold">Create Playlist</span>
+            </button>
+            <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <Heart className="w-6 h-6 fill-primary text-primary" />
+              <span className="font-semibold">Liked Songs</span>
+            </button>
+            <button onClick={() => navigate('/profile')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <User className="w-6 h-6" />
+              <span className="font-semibold">Profile</span>
+            </button>
+            <button onClick={handlePremiumClick} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+              <Crown className="w-6 h-6" />
+              <span className="font-semibold">Premium</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       <div className="px-3 py-2">

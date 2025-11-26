@@ -36,7 +36,7 @@ export default function Create() {
         title: playlistName.trim(),
         description: playlistDescription.trim() || null,
         user_id: user.id,
-        is_public: false,
+        is_public: true,
       });
 
       if (error) throw error;
