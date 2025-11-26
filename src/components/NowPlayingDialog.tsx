@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudio, useAudioElement } from "@/contexts/AudioContext";
 import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, X, ListMusic, Mic2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { QueueDialog } from "@/components/QueueDialog";
 import { LyricsDialog } from "@/components/LyricsDialog";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
+import { AudioVisualizer } from "@/components/AudioVisualizer";
 
 interface NowPlayingDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
     toggleRepeat 
   } = useAudio();
   
+  const audioElement = useAudioElement();
   const [localVolume, setLocalVolume] = useState([volume]);
   const [localProgress, setLocalProgress] = useState([progress]);
   const [showQueue, setShowQueue] = useState(false);
@@ -85,8 +87,8 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               <h3 className="text-sm font-semibold">Now Playing</h3>
             </div>
 
-            {/* Album Art */}
-            <div className="w-full max-w-[340px] aspect-square rounded-lg overflow-hidden shadow-2xl mb-8 animate-scale-in mx-auto">
+            {/* Album Art with Visualizer Overlay */}
+            <div className="w-full max-w-[340px] aspect-square rounded-lg overflow-hidden shadow-2xl mb-8 animate-scale-in mx-auto relative">
               {currentTrack.image_url ? (
                 <img 
                   src={currentTrack.image_url} 
@@ -96,6 +98,16 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10" />
               )}
+              
+              {/* Audio Visualizer Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-sm">
+                <AudioVisualizer 
+                  audioElement={audioElement} 
+                  isPlaying={isPlaying}
+                  className="h-full opacity-90"
+                  barCount={30}
+                />
+              </div>
             </div>
 
             {/* Track Info */}

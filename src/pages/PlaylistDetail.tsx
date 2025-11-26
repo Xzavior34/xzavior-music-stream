@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AddToPlaylistPopover } from '@/components/AddToPlaylistPopover';
 import { PlaylistEditDialog } from '@/components/PlaylistEditDialog';
+import { PlaylistCollaborators } from '@/components/PlaylistCollaborators';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -326,7 +327,7 @@ const PlaylistDetail = () => {
                 {tracks.length} songs
               </p>
               
-              <div className="flex items-center gap-3 lg:gap-4">
+              <div className="flex items-center gap-3 lg:gap-4 flex-wrap">
                 <Button onClick={playPlaylist} size="lg" className="rounded-full" disabled={tracks.length === 0}>
                   <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2 ml-0.5" fill="currentColor" />
                   <span className="hidden sm:inline">Play</span>
@@ -334,6 +335,14 @@ const PlaylistDetail = () => {
                 <Button variant="outline" size="lg" className="rounded-full p-3">
                   <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
+                
+                {/* Collaborators button for own playlists */}
+                {isOwnPlaylist && (
+                  <PlaylistCollaborators 
+                    playlistId={playlist.id} 
+                    isOwner={isOwnPlaylist}
+                  />
+                )}
                 
                 {/* Edit/Delete options for own playlists */}
                 {isOwnPlaylist && (
@@ -376,11 +385,16 @@ const PlaylistDetail = () => {
                   >
                     <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
                   </button>
-                  {track.image_url && (
-                    <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                      <img src={track.image_url} alt={track.title} className="w-full h-full object-cover" />
-                    </div>
-                  )}
+            <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-muted">
+              <img 
+                src={track.image_url} 
+                alt={track.title} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold truncate">{track.title}</div>
                     <div className="text-sm text-muted-foreground truncate">{track.artist_name}</div>
