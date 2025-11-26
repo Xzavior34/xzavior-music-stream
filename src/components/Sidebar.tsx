@@ -23,7 +23,6 @@ export const Sidebar = ({ className }: SidebarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Helper to determine button style based on active state
   const getButtonClass = (path: string) => cn(
     "flex items-center gap-4 w-full px-4 py-3 rounded-lg transition-colors text-sidebar-foreground",
     isActive(path) ? "bg-sidebar-accent font-bold" : "hover:bg-sidebar-accent font-semibold"
@@ -38,7 +37,6 @@ export const Sidebar = ({ className }: SidebarProps) => {
       </div>
 
       <nav className="flex-1 px-3 overflow-y-auto">
-        {/* Main Navigation */}
         <div className="space-y-1">
           <button onClick={() => navigate('/')} className={getButtonClass('/')}>
             <Home className="w-6 h-6" />
@@ -50,13 +48,13 @@ export const Sidebar = ({ className }: SidebarProps) => {
             <span>Search</span>
           </button>
           
+          {/* Discover is now ALWAYS visible */}
           <button onClick={() => navigate('/discover')} className={getButtonClass('/discover')}>
             <Compass className="w-6 h-6" />
             <span>Discover</span>
           </button>
         </div>
 
-        {/* User Library & Collection */}
         {user && (
           <div className="mt-8">
             <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -87,14 +85,13 @@ export const Sidebar = ({ className }: SidebarProps) => {
         )}
       </nav>
 
-      {/* Footer / Settings */}
       <div className="px-3 py-2 border-t border-sidebar-border bg-sidebar/50">
         <div className="mb-2">
            <ThemeToggle />
         </div>
         
         {user ? (
-          <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10">
+          <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600">
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>
