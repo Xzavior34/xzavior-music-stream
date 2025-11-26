@@ -1,4 +1,20 @@
-import { Home, Search, Library, Menu, X, Play, Pause, Heart, MonitorSpeaker, Plus, Sparkles } from "lucide-react";
+import { 
+  Home, 
+  Search, 
+  Library, 
+  Menu, 
+  X, 
+  Play, 
+  Pause, 
+  Heart, 
+  MonitorSpeaker, 
+  Plus, 
+  Sparkles, 
+  User, 
+  Compass, 
+  Crown, 
+  LogOut 
+} from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -24,7 +40,13 @@ export const MobileNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Define the new bottom nav links to match Spotify mobile
+  // Helper for Sidebar links to close menu on click
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
+  // Define the bottom nav links to match Spotify mobile
   const navLinks = [
     { path: '/', label: 'Home', Icon: Home },
     { path: '/search', label: 'Search', Icon: Search },
@@ -35,11 +57,11 @@ export const MobileNav = () => {
 
   return (
     <>
-      {/* --- TOP HEADER (Unchanged, retained for context) --- */}
+      {/* --- TOP HEADER --- */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm pt-3 pb-2 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Profile Icon (Triggers Sidebar) - The 'P' in your screenshot */}
+            {/* Profile Icon (Triggers Sidebar) */}
             <button 
               onClick={() => setIsOpen(true)}
               className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm"
@@ -47,7 +69,6 @@ export const MobileNav = () => {
               {user?.email ? user.email.charAt(0).toUpperCase() : "X"}
             </button>
             
-            {/* Brand Name restored */}
             <h1 className="text-xl font-bold text-primary tracking-tight">
               xzavior
             </h1>
@@ -57,7 +78,7 @@ export const MobileNav = () => {
         </div>
       </div>
 
-      {/* --- SIDEBAR (Hidden by default) (Unchanged, retained for context) --- */}
+      {/* --- SIDEBAR OVERLAY (Black background) --- */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
@@ -65,37 +86,69 @@ export const MobileNav = () => {
         />
       )}
 
+      {/* --- SLIDE-OUT SIDEBAR --- */}
       <div
         className={cn(
-          "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-sidebar border-r border-sidebar-border transition-transform duration-300",
+          "lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-sidebar border-r border-sidebar-border transition-transform duration-300 flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full p-6">
-            <div className="flex items-center justify-between mb-8">
-                <span className="font-bold text-lg">Menu</span>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                    <X className="w-5 h-5" />
+        <div className="flex items-center justify-between p-6 border-b border-sidebar-border/50">
+            <span className="font-bold text-lg">Menu</span>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <X className="w-5 h-5" />
+            </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-4 px-3">
+            {/* Main Navigation */}
+            <div className="space-y-1 mb-8">
+                <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/')}>
+                    <Home className="w-5 h-5" /> Home
+                </Button>
+                <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/search')}>
+                    <Search className="w-5 h-5" /> Search
+                </Button>
+                <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/discover')}>
+                    <Compass className="w-5 h-5" /> Discover
                 </Button>
             </div>
-            {/* Sidebar Links */}
-            <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/'); setIsOpen(false); }}>
-                    <Home className="mr-2 w-5 h-5" /> Home
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/search'); setIsOpen(false); }}>
-                    <Search className="mr-2 w-5 h-5" /> Search
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/library'); setIsOpen(false); }}>
-                    <Library className="mr-2 w-5 h-5" /> Library
-                </Button>
-            </nav>
+
+            {/* Your Collection Section */}
+            {user && (
+              <div>
+                <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Your Collection
+                </h3>
+                <div className="space-y-1">
+                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/create')}>
+                      <Plus className="w-5 h-5" /> Create Playlist
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/library')}>
+                      <Heart className="w-5 h-5 text-primary fill-primary" /> Liked Songs
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/profile')}>
+                      <User className="w-5 h-5" /> Profile
+                  </Button>
+                  <Button variant="ghost" className="w-full justify-start gap-4" onClick={() => handleNavClick('/premium')}>
+                      <Crown className="w-5 h-5 text-yellow-500" /> Premium
+                  </Button>
+                </div>
+              </div>
+            )}
+        </div>
             
-            <div className="mt-auto border-t pt-4">
-                 <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-destructive">
-                    Sign Out
-                </Button>
-            </div>
+        {/* Footer */}
+        <div className="p-4 border-t border-sidebar-border">
+             {user ? (
+               <Button onClick={handleSignOut} variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100/10 gap-2">
+                  <LogOut className="w-4 h-4" /> Sign Out
+              </Button>
+             ) : (
+              <Button onClick={() => handleNavClick('/auth')} variant="ghost" className="w-full justify-start gap-2">
+                  <User className="w-4 h-4" /> Sign In
+              </Button>
+             )}
         </div>
       </div>
 
@@ -141,7 +194,7 @@ export const MobileNav = () => {
         </div>
       )}
 
-      {/* --- BOTTOM NAVIGATION (SPOTIFY-LIKE DESIGN) --- */}
+      {/* --- BOTTOM NAVIGATION --- */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border h-[62px]">
         <div className="flex items-center justify-around h-full px-1">
           {navLinks.map(({ path, label, Icon }) => (
