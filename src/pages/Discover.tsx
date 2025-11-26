@@ -16,7 +16,7 @@ interface Track {
   artist_name: string | null; 
   image_url: string | null;
   audio_url: string | null;
-  user_id: string | null;
+  uploaded_by: string | null;
   duration: number;
   // Optional: If you link tracks to profiles
   profiles?: {
@@ -49,16 +49,16 @@ export default function Discover() {
           image_url,
           audio_url,
           duration,
-          user_id
+          uploaded_by
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // 4. Fetch uploader profiles (only if user_id exists)
+      // 4. Fetch uploader profiles (only if uploaded_by exists)
       if (data && data.length > 0) {
-        // Filter out tracks that don't have a user_id (system tracks)
-        const userIds = [...new Set(data.map(t => t.user_id).filter(Boolean))];
+        // Filter out tracks that don't have an uploaded_by (system tracks)
+        const userIds = [...new Set(data.map(t => t.uploaded_by).filter(Boolean))];
         
         let profilesMap = new Map();
 
@@ -75,7 +75,7 @@ export default function Discover() {
 
         const tracksWithProfiles = data.map(track => ({
           ...track,
-          profiles: track.user_id ? profilesMap.get(track.user_id) : null
+          profiles: track.uploaded_by ? profilesMap.get(track.uploaded_by) : null
         }));
 
         setTracks(tracksWithProfiles as Track[]);

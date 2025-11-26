@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Play } from "lucide-react";
@@ -54,11 +53,10 @@ const Search = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
+    <div className="flex h-screen overflow-hidden bg-background">
       <MobileNav />
       
-      <main className="flex-1 overflow-y-auto pb-32 lg:pb-24 pt-[65px] lg:pt-0">
+      <main className="flex-1 w-full overflow-y-auto pb-32 lg:pb-24 pt-[65px] lg:pt-8">
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="mb-6 lg:mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold mb-4 lg:mb-6">Search</h1>

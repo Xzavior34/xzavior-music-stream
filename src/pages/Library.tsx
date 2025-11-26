@@ -90,14 +90,11 @@ export default function Library() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar component removed */}
-      
-      {/* Removed lg:ml-64 to make it full width on all screens */}
-      <main className="flex-1 w-full pb-32 lg:pb-24">
+    <div className="flex min-h-screen overflow-hidden bg-background">
+      <main className="flex-1 w-full overflow-y-auto pb-32 lg:pb-24">
         <MobileNav />
         
-        <div className="pt-16 lg:pt-8 px-4 lg:px-8">
+        <div className="pt-[65px] lg:pt-8 px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 lg:w-56 lg:h-56 bg-gradient-to-br from-primary/40 to-primary/10 rounded flex items-center justify-center">

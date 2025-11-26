@@ -8,6 +8,7 @@ interface Track {
   audio_url: string;
   duration: number;
   album_id?: string;
+  image_url?: string;
 }
 
 interface AudioContextType {

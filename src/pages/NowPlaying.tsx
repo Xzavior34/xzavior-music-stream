@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { LyricsDisplay } from "@/components/LyricsDisplay";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 
 export default function NowPlaying() {
   const navigate = useNavigate();
@@ -95,14 +96,24 @@ export default function NowPlaying() {
             <h1 className="text-3xl font-black truncate mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{currentTrack.title}</h1>
             <p className="text-base text-muted-foreground truncate font-medium">{currentTrack.artist_name}</p>
           </div>
-          <TrackLikeButton 
-            trackId={currentTrack.id}
-            trackTitle={currentTrack.title}
-            artistName={currentTrack.artist_name}
-            audioUrl={currentTrack.audio_url}
-            duration={currentTrack.duration}
-            className="scale-125"
-          />
+          <div className="flex items-center gap-2">
+            <AddToPlaylistPopover
+              trackId={currentTrack.id}
+              trackTitle={currentTrack.title}
+              artistName={currentTrack.artist_name}
+              audioUrl={currentTrack.audio_url}
+              duration={currentTrack.duration}
+              albumId={currentTrack.album_id}
+            />
+            <TrackLikeButton 
+              trackId={currentTrack.id}
+              trackTitle={currentTrack.title}
+              artistName={currentTrack.artist_name}
+              audioUrl={currentTrack.audio_url}
+              duration={currentTrack.duration}
+              className="scale-125"
+            />
+          </div>
         </div>
       </div>
 
