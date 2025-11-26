@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.get-lyrics]
 verify_jwt = false
+
+[functions.get-songlink]
+verify_jwt = false
