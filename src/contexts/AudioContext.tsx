@@ -114,8 +114,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       playTrack(nextTrack);
     } else if (repeat === 'all' && currentTrack) {
       playTrack(currentTrack);
-    } else {
-      setIsPlaying(false);
     }
   };
 
@@ -156,7 +154,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const toggleShuffle = () => {
-    setShuffle(!shuffle);
+    const newShuffleState = !shuffle;
+    setShuffle(newShuffleState);
+    
+    if (newShuffleState && queue.length > 0) {
+      const shuffled = [...queue].sort(() => Math.random() - 0.5);
+      setQueue(shuffled);
+    }
   };
 
   const toggleRepeat = () => {
