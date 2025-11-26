@@ -1,7 +1,7 @@
-import { Home, Search, Library, Plus, Heart, LogOut, LogIn } from "lucide-react";
+import { Home, Search, Library, Plus, Heart, LogOut, LogIn, Crown } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ className }: SidebarProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -19,6 +20,14 @@ export const Sidebar = ({ className }: SidebarProps) => {
     toast.success('Signed out successfully');
     navigate('/auth');
   };
+
+  const handlePremiumClick = () => {
+    toast.info('Coming Soon', {
+      description: 'Premium features will be available soon!'
+    });
+  };
+
+  const isHomePage = location.pathname === '/';
 
   return (
     <div className={cn("flex flex-col h-full bg-sidebar border-r border-sidebar-border", className)}>
@@ -50,6 +59,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
           <button onClick={() => navigate('/library')} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
             <Heart className="w-6 h-6 fill-primary text-primary" />
             <span className="font-semibold">Liked Songs</span>
+          </button>
+          <button onClick={handlePremiumClick} className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
+            <Crown className="w-6 h-6" />
+            <span className="font-semibold">Premium</span>
           </button>
         </div>
       </nav>

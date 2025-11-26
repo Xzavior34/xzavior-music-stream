@@ -5,8 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useAudio } from "@/contexts/AudioContext";
+import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
+import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { Music, Heart, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface LikedTrack {
   id: string;
@@ -36,6 +39,9 @@ export default function Library() {
     }
     fetchLikedTracks();
   }, [user, navigate]);
+
+  // Real-time subscription for liked tracks
+  useRealtimeSubscription('liked_tracks', ['liked_tracks'], user?.id);
 
   const fetchLikedTracks = async () => {
     try {
@@ -137,9 +143,29 @@ export default function Library() {
                       {item.tracks.artist_name}
                     </p>
                   </div>
-                  <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    {formatDuration(item.tracks.duration)}
+                  <div className="flex items-center gap-2">
+                    <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      {formatDuration(item.tracks.duration)}
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <AddToPlaylistPopover
+                        trackId={item.tracks.id}
+                        trackTitle={item.tracks.title}
+                        artistName={item.tracks.artist_name}
+                        audioUrl={item.tracks.audio_url}
+                        duration={item.tracks.duration}
+                        albumId={item.tracks.album_id || undefined}
+                      />
+                      <TrackLikeButton
+                        trackId={item.tracks.id}
+                        trackTitle={item.tracks.title}
+                        artistName={item.tracks.artist_name}
+                        audioUrl={item.tracks.audio_url}
+                        duration={item.tracks.duration}
+                        albumId={item.tracks.album_id || undefined}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
