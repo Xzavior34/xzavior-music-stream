@@ -45,22 +45,36 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
   const [playHistory, setPlayHistory] = useState<Track[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const crossfadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isCrossfadingRef = useRef(false);
+  const CROSSFADE_DURATION = 3; // 3 seconds crossfade
 
   useEffect(() => {
     audioRef.current = new Audio();
+    nextAudioRef.current = new Audio();
     
     const audio = audioRef.current;
+    const nextAudio = nextAudioRef.current;
     
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         setProgressState((audio.currentTime / audio.duration) * 100);
+        
+        // Start crossfade when near the end
+        const timeRemaining = audio.duration - audio.currentTime;
+        if (timeRemaining <= CROSSFADE_DURATION && timeRemaining > 0 && !isCrossfadingRef.current) {
+          const nextTrack = queue[0];
+          if (nextTrack && repeat !== 'one') {
+            startCrossfade(nextTrack);
+          }
+        }
       }
     });
 
     // Handle audio errors gracefully
     audio.addEventListener('error', (e) => {
       console.error('Audio playback error:', e);
-      // Try to skip to next track if current fails
       if (queue.length > 0) {
         skipNext();
       } else {
@@ -68,9 +82,19 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
 
+    nextAudio.addEventListener('error', (e) => {
+      console.error('Next audio error:', e);
+      isCrossfadingRef.current = false;
+    });
+
     return () => {
       audio.pause();
       audio.src = '';
+      nextAudio.pause();
+      nextAudio.src = '';
+      if (crossfadeTimeoutRef.current) {
+        clearTimeout(crossfadeTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -114,35 +138,97 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [currentTrack, queue, repeat]);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && !isCrossfadingRef.current) {
       audioRef.current.volume = volume / 100;
+    }
+    if (nextAudioRef.current) {
+      nextAudioRef.current.volume = 0;
     }
   }, [volume]);
 
+  const startCrossfade = (nextTrack: Track) => {
+    if (isCrossfadingRef.current || !audioRef.current || !nextAudioRef.current) return;
+    
+    isCrossfadingRef.current = true;
+    const currentAudio = audioRef.current;
+    const nextAudio = nextAudioRef.current;
+    
+    // Prepare next track
+    nextAudio.src = nextTrack.audio_url;
+    nextAudio.volume = 0;
+    nextAudio.play();
+    
+    const startVolume = volume / 100;
+    const steps = 30;
+    const interval = (CROSSFADE_DURATION * 1000) / steps;
+    let step = 0;
+    
+    const fadeInterval = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      
+      // Fade out current
+      currentAudio.volume = startVolume * (1 - progress);
+      // Fade in next
+      nextAudio.volume = startVolume * progress;
+      
+      if (step >= steps) {
+        clearInterval(fadeInterval);
+        // Swap audio elements
+        currentAudio.pause();
+        currentAudio.src = '';
+        
+        // Move next audio to current
+        const temp = audioRef.current;
+        audioRef.current = nextAudioRef.current;
+        nextAudioRef.current = temp;
+        
+        // Update state
+        setCurrentTrack(nextTrack);
+        setQueue(prev => prev.slice(1));
+        isCrossfadingRef.current = false;
+        
+        // Log listening history
+        logListeningHistory(nextTrack);
+      }
+    }, interval);
+  };
+
+  const logListeningHistory = async (track: Track) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('listening_history').insert({
+          user_id: user.id,
+          track_id: track.id,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to log listening history:', error);
+    }
+  };
+
   const playTrack = async (track: Track) => {
     if (audioRef.current) {
+      // Cancel any ongoing crossfade
+      isCrossfadingRef.current = false;
+      if (crossfadeTimeoutRef.current) {
+        clearTimeout(crossfadeTimeoutRef.current);
+      }
+      
       // Add current track to history before playing new track
       if (currentTrack) {
         setPlayHistory(prev => [...prev, currentTrack]);
       }
       
       audioRef.current.src = track.audio_url;
+      audioRef.current.volume = volume / 100;
       audioRef.current.play();
       setCurrentTrack(track);
       setIsPlaying(true);
 
       // Log to listening history
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from('listening_history').insert({
-            user_id: user.id,
-            track_id: track.id,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to log listening history:', error);
-      }
+      await logListeningHistory(track);
     }
   };
 
