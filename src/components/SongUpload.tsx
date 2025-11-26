@@ -116,7 +116,7 @@ export const SongUpload = () => {
           audio_url: audioUrl,
           image_url: imageUrl,
           duration: duration,
-          user_id: user.id, // Using user_id to match your schema
+          uploaded_by: user.id,
         });
 
       if (insertError) throw insertError;

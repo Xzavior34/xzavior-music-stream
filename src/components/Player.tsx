@@ -1,10 +1,11 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, ListMusic } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, ListMusic, Plus } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAudio } from "@/contexts/AudioContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 
 export const Player = () => {
   const { currentTrack, isPlaying, progress, volume, queue, shuffle, repeat, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress, toggleShuffle, toggleRepeat } = useAudio();
@@ -108,6 +109,16 @@ export const Player = () => {
 
       {/* Volume & Queue */}
       <div className="hidden lg:flex items-center gap-2 w-[300px] justify-end">
+        {currentTrack && (
+          <AddToPlaylistPopover
+            trackId={currentTrack.id}
+            trackTitle={currentTrack.title}
+            artistName={currentTrack.artist_name}
+            audioUrl={currentTrack.audio_url}
+            duration={currentTrack.duration}
+            albumId={currentTrack.album_id}
+          />
+        )}
         <Button
           variant="ghost"
           size="icon"
