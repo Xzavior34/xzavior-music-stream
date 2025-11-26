@@ -243,12 +243,6 @@ const Search = () => {
                           <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {track.isPreview && (
-                            <Badge variant="outline" className="text-xs">Deezer Preview</Badge>
-                          )}
-                          {!track.isPreview && track.source === 'jiosaavn' && (
-                            <Badge variant="secondary" className="text-xs">Full Track</Badge>
-                          )}
                           <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
                             {formatDuration(track.duration)}
                           </div>
