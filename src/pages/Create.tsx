@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/Sidebar";
+// Removed Sidebar import
 import { MobileNav } from "@/components/MobileNav";
 import { SongUpload } from "@/components/SongUpload";
 import { useState } from "react";
@@ -55,9 +55,10 @@ export default function Create() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
+      {/* Sidebar component removed */}
       
-      <main className="flex-1 lg:ml-64 pb-32 lg:pb-24">
+      {/* Removed lg:ml-64 to make it full width */}
+      <main className="flex-1 w-full pb-32 lg:pb-24">
         <MobileNav />
         
         <div className="pt-16 lg:pt-8 px-4 lg:px-8">
