@@ -60,10 +60,10 @@ export const musicApi = {
 
     const trimmedQuery = query.trim();
     
-    // Try JioSaavn primary
+    // Try JioSaavn primary with 10s timeout
     try {
       const url = `${JIOSAAVN_BASE}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
-      const data = await fetchWithTimeout(url, 8000);
+      const data = await fetchWithTimeout(url, 10000);
       
       if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
         const tracks = data.data.results
@@ -109,10 +109,10 @@ export const musicApi = {
       console.warn('JioSaavn primary failed:', error);
     }
 
-    // Try JioSaavn fallback
+    // Try JioSaavn fallback with 10s timeout
     try {
       const url = `${JIOSAAVN_FALLBACK}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
-      const data = await fetchWithTimeout(url, 8000);
+      const data = await fetchWithTimeout(url, 10000);
       
       if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
         const tracks = data.data.results

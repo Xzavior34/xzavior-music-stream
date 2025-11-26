@@ -43,6 +43,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [queue, setQueue] = useState<Track[]>([]);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
+  const [playHistory, setPlayHistory] = useState<Track[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -96,6 +97,11 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const playTrack = async (track: Track) => {
     if (audioRef.current) {
+      // Add current track to history before playing new track
+      if (currentTrack) {
+        setPlayHistory(prev => [...prev, currentTrack]);
+      }
+      
       audioRef.current.src = track.audio_url;
       audioRef.current.play();
       setCurrentTrack(track);
@@ -141,7 +147,24 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const skipPrevious = () => {
     if (audioRef.current) {
-      audioRef.current.currentTime = 0;
+      // If more than 3 seconds into track, restart it
+      if (audioRef.current.currentTime > 3) {
+        audioRef.current.currentTime = 0;
+      } else if (playHistory.length > 0) {
+        // Go to previous track in history
+        const previousTrack = playHistory[playHistory.length - 1];
+        setPlayHistory(playHistory.slice(0, -1));
+        
+        // Add current track back to queue
+        if (currentTrack) {
+          setQueue([currentTrack, ...queue]);
+        }
+        
+        playTrack(previousTrack);
+      } else {
+        // No history, just restart
+        audioRef.current.currentTime = 0;
+      }
     }
   };
 
