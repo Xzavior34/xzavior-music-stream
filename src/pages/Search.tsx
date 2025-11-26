@@ -149,6 +149,7 @@ const Search = () => {
                             artistName={track.artist.name}
                             audioUrl={track.preview}
                             duration={track.duration}
+                            albumId={track.album.cover_medium}
                           />
                         </div>
                       </div>

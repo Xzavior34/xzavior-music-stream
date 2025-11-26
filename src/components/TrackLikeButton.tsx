@@ -30,26 +30,41 @@ export const TrackLikeButton = ({
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const isExternal = !isUuid(trackId);
 
   useEffect(() => {
-    if (user && isUuid(trackId)) {
+    if (user) {
       checkIfLiked();
     }
   }, [user, trackId]);
 
   const checkIfLiked = async () => {
-    if (!user || !isUuid(trackId)) return;
+    if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('liked_tracks')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('track_id', trackId)
-        .maybeSingle();
+      if (isExternal) {
+        // Check liked_external_tracks
+        const { data, error } = await supabase
+          .from('liked_external_tracks')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('track_id', trackId)
+          .maybeSingle();
 
-      if (error) throw error;
-      setIsLiked(!!data);
+        if (error) throw error;
+        setIsLiked(!!data);
+      } else {
+        // Check liked_tracks
+        const { data, error } = await supabase
+          .from('liked_tracks')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('track_id', trackId)
+          .maybeSingle();
+
+        if (error) throw error;
+        setIsLiked(!!data);
+      }
     } catch (error) {
       console.error('Error checking liked status:', error);
     }
@@ -63,62 +78,102 @@ export const TrackLikeButton = ({
       return;
     }
 
-    if (!isUuid(trackId)) {
-      toast.error('Liking this song is not available yet');
-      return;
-    }
-
     setLoading(true);
     try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from('liked_tracks')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('track_id', trackId);
+      if (isExternal) {
+        // Handle external tracks (Deezer)
+        if (isLiked) {
+          const { error } = await supabase
+            .from('liked_external_tracks')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('track_id', trackId);
 
-        if (error) throw error;
-        setIsLiked(false);
-        toast.success('Removed from liked songs');
-      } else {
-        // First, ensure track exists in tracks table (only for internal tracks)
-        if (trackTitle && artistName && audioUrl && typeof duration === 'number') {
-          const { data: existingTrack, error: existingError } = await supabase
-            .from('tracks')
-            .select('id')
-            .eq('id', trackId)
-            .maybeSingle();
-
-          if (existingError) throw existingError;
-
-          if (!existingTrack) {
-            const { error: insertError } = await supabase
-              .from('tracks')
-              .insert({
+          if (error) throw error;
+          setIsLiked(false);
+          toast.success('Removed from liked songs');
+        } else {
+          // First, ensure external track exists
+          if (trackTitle && artistName && audioUrl && typeof duration === 'number') {
+            const { error: upsertError } = await supabase
+              .from('external_tracks')
+              .upsert({
                 id: trackId,
                 title: trackTitle,
                 artist_name: artistName,
-                audio_url: audioUrl,
+                preview_url: audioUrl,
                 duration: duration,
-                album_id: albumId || null,
-                uploaded_by: user.id,
-              });
+                image_url: albumId, // For Deezer, we pass album cover URL as albumId
+                source: 'deezer',
+              }, { onConflict: 'id' });
 
-            if (insertError) throw insertError;
+            if (upsertError) throw upsertError;
           }
+
+          // Then add to liked external tracks
+          const { error } = await supabase
+            .from('liked_external_tracks')
+            .insert({
+              user_id: user.id,
+              track_id: trackId,
+            });
+
+          if (error) throw error;
+          setIsLiked(true);
+          toast.success('Added to liked songs');
         }
+      } else {
+        // Handle internal tracks
+        if (isLiked) {
+          const { error } = await supabase
+            .from('liked_tracks')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('track_id', trackId);
 
-        // Then add to liked tracks
-        const { error } = await supabase
-          .from('liked_tracks')
-          .insert({
-            user_id: user.id,
-            track_id: trackId,
-          });
+          if (error) throw error;
+          setIsLiked(false);
+          toast.success('Removed from liked songs');
+        } else {
+          // First, ensure track exists in tracks table (only for internal tracks)
+          if (trackTitle && artistName && audioUrl && typeof duration === 'number') {
+            const { data: existingTrack, error: existingError } = await supabase
+              .from('tracks')
+              .select('id')
+              .eq('id', trackId)
+              .maybeSingle();
 
-        if (error) throw error;
-        setIsLiked(true);
-        toast.success('Added to liked songs');
+            if (existingError) throw existingError;
+
+            if (!existingTrack) {
+              const { error: insertError } = await supabase
+                .from('tracks')
+                .insert({
+                  id: trackId,
+                  title: trackTitle,
+                  artist_name: artistName,
+                  audio_url: audioUrl,
+                  duration: duration,
+                  album_id: albumId || null,
+                  uploaded_by: user.id,
+                });
+
+              if (insertError) throw insertError;
+            }
+          }
+
+          // Then add to liked tracks
+          const { error } = await supabase
+            .from('liked_tracks')
+            .insert({
+              user_id: user.id,
+              track_id: trackId,
+            });
+
+          if (error) throw error;
+          setIsLiked(true);
+          toast.success('Added to liked songs');
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);
