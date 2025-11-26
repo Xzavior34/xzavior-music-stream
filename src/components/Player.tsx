@@ -2,16 +2,16 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle } from "lu
 import { Slider } from "@/components/ui/slider";
 import { useAudio } from "@/contexts/AudioContext";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
+import { NowPlayingDialog } from "@/components/NowPlayingDialog";
 
 export const Player = () => {
   const { currentTrack, isPlaying, progress, volume, queue, shuffle, repeat, togglePlay, skipNext, skipPrevious, setVolume: setAudioVolume, setProgress: setAudioProgress, toggleShuffle, toggleRepeat } = useAudio();
   const [localVolume, setLocalVolume] = useState([volume]);
   const [localProgress, setLocalProgress] = useState([progress]);
-  const navigate = useNavigate();
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
 
   useEffect(() => {
     setLocalProgress([progress]);
@@ -37,23 +37,37 @@ export const Player = () => {
   const totalTime = currentTrack?.duration || 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-player border-t border-border h-20 sm:h-24 px-2 sm:px-4 flex items-center justify-between z-50">
-      {/* Now Playing */}
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 lg:w-[300px] lg:flex-initial">
-        {currentTrack ? (
-          <>
-            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 rounded bg-gradient-to-br from-primary/40 to-primary/10" />
-            </div>
-            <div className="min-w-0 hidden sm:block">
-              <div className="font-semibold text-xs sm:text-sm truncate">{currentTrack.title}</div>
-              <div className="text-xs text-muted-foreground truncate">{currentTrack.artist_name}</div>
-            </div>
-          </>
-        ) : (
-          <div className="text-xs sm:text-sm text-muted-foreground hidden sm:block">No track playing</div>
-        )}
-      </div>
+    <>
+      <NowPlayingDialog open={showNowPlaying} onOpenChange={setShowNowPlaying} />
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-player/95 backdrop-blur-xl border-t border-border h-20 sm:h-24 px-2 sm:px-4 flex items-center justify-between z-50 shadow-2xl">
+        {/* Now Playing */}
+        <div 
+          className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 lg:w-[300px] lg:flex-initial cursor-pointer hover:bg-muted/20 rounded-lg p-2 transition-colors"
+          onClick={() => currentTrack && setShowNowPlaying(true)}
+        >
+          {currentTrack ? (
+            <>
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex-shrink-0 overflow-hidden shadow-lg">
+                {currentTrack.image_url ? (
+                  <img 
+                    src={currentTrack.image_url} 
+                    alt={currentTrack.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded bg-gradient-to-br from-primary/40 to-primary/10" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-xs sm:text-sm truncate">{currentTrack.title}</div>
+                <div className="text-xs text-muted-foreground truncate">{currentTrack.artist_name}</div>
+              </div>
+            </>
+          ) : (
+            <div className="text-xs sm:text-sm text-muted-foreground">No track playing</div>
+          )}
+        </div>
 
       {/* Controls */}
       <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 max-w-[700px]">
@@ -135,5 +149,6 @@ export const Player = () => {
         />
       </div>
     </div>
+    </>
   );
 };
