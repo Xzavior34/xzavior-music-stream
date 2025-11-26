@@ -81,7 +81,7 @@ serve(async (req) => {
       );
     }
 
-    // Call Lovable AI for recommendations
+    // Call Lovable AI for song recommendations
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -93,14 +93,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a music recommendation expert with deep knowledge of music genres, artists, and listener preferences. Analyze user listening patterns to suggest songs they would love. Consider musical elements like tempo, mood, genre, and artist style. Return ONLY a JSON array with objects containing: title, artist, genre, reason (brief explanation why they\'d like it based on their listening habits).'
+            content: 'You are a music recommendation expert. Analyze user listening patterns and return ONLY song titles and artists they would enjoy. Return a simple JSON array with objects containing: artist (exact artist name), title (exact song name). No explanations, just 8 songs.'
           },
           {
             role: 'user',
-            content: `Based on this user's music taste:\n\nLiked songs: ${JSON.stringify(likedSongs.slice(0, 15))}\n\nRecently played: ${JSON.stringify(recentlyPlayed.slice(0, 15))}\n\nAnalyze their preferences and recommend 10 songs that match their musical taste. Consider patterns in genres, artists, tempo, and mood. Be specific about why each recommendation fits their profile.`
+            content: `Based on this user's music taste:\n\nLiked songs: ${JSON.stringify(likedSongs.slice(0, 15))}\n\nRecently played: ${JSON.stringify(recentlyPlayed.slice(0, 15))}\n\nRecommend 8 specific real songs that match their taste. Return artist and title only.`
           }
         ],
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
@@ -111,21 +111,54 @@ serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    console.log('AI response received');
-    
     const content = aiData.choices[0].message.content;
     
-    // Parse the AI response
-    let recommendations;
+    // Parse AI recommendations
+    let aiSuggestions = [];
     try {
-      // Try to extract JSON from markdown code blocks if present
       const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/\[[\s\S]*\]/);
       const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
-      recommendations = JSON.parse(jsonStr);
+      aiSuggestions = JSON.parse(jsonStr);
     } catch (e) {
       console.error('Failed to parse AI response:', e);
-      recommendations = [];
+      return new Response(
+        JSON.stringify({ recommendations: [] }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    console.log('Fetching actual tracks from Deezer...');
+    
+    // Fetch actual tracks from Deezer API
+    const recommendations = [];
+    for (const suggestion of aiSuggestions.slice(0, 8)) {
+      try {
+        const searchQuery = `${suggestion.artist} ${suggestion.title}`;
+        const deezerResponse = await fetch(
+          `https://api.deezer.com/search?q=${encodeURIComponent(searchQuery)}&limit=1`
+        );
+        
+        if (deezerResponse.ok) {
+          const deezerData = await deezerResponse.json();
+          if (deezerData.data && deezerData.data.length > 0) {
+            const track = deezerData.data[0];
+            recommendations.push({
+              id: track.id.toString(),
+              title: track.title,
+              artist: track.artist.name,
+              image_url: track.album.cover_medium,
+              preview_url: track.preview,
+              duration: track.duration,
+              album: track.album.title,
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching track:', e);
+      }
+    }
+
+    console.log(`Returning ${recommendations.length} actual tracks`);
 
     return new Response(
       JSON.stringify({ recommendations }), 
