@@ -6,12 +6,14 @@ import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { Upload, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export const SongUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,6 +79,11 @@ export const SongUpload = () => {
       setTitle('');
       setArtist('');
       event.target.value = '';
+      
+      // Redirect to library after successful upload
+      setTimeout(() => {
+        navigate('/library');
+      }, 500);
 
     } catch (error: any) {
       console.error('Upload error:', error);

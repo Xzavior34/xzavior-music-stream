@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 export default function Create() {
   const { user } = useAuth();
@@ -18,6 +19,10 @@ export default function Create() {
   const [playlistDescription, setPlaylistDescription] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Real-time subscriptions for playlists and tracks
+  useRealtimeSubscription('playlists', ['playlists'], user?.id);
+  useRealtimeSubscription('tracks', ['tracks'], user?.id);
 
   const handleCreatePlaylist = async () => {
     if (!user || !playlistName.trim()) {

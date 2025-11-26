@@ -4,8 +4,8 @@ import { MobileNav } from "@/components/MobileNav";
 import { AlbumCard } from "@/components/AlbumCard";
 import { PlaylistCard } from "@/components/PlaylistCard";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
+import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 import { Recommendations } from "@/components/Recommendations";
-import { SongUpload } from "@/components/SongUpload";
 import { musicService } from "@/services/musicService";
 import { deezerApi } from "@/services/deezerApi";
 import { useAudio } from "@/contexts/AudioContext";
@@ -13,6 +13,7 @@ import { Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface Album {
   id: string | number;
@@ -42,6 +43,11 @@ const Index = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Real-time subscriptions for instant updates
+  useRealtimeSubscription('tracks', ['tracks'], user?.id);
+  useRealtimeSubscription('liked_tracks', ['liked_tracks'], user?.id);
+  useRealtimeSubscription('playlists', ['playlists'], user?.id);
 
   const fetchData = async () => {
     try {
@@ -100,13 +106,6 @@ const Index = () => {
               {/* AI Recommendations */}
               {user && <Recommendations />}
 
-              {/* Song Upload */}
-              {user && (
-                <section className="mb-8 lg:mb-12">
-                  <SongUpload />
-                </section>
-              )}
-
               {/* Trending Songs */}
               <section className="mb-8 lg:mb-12">
                 <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -133,14 +132,22 @@ const Index = () => {
                           {track.artist.name}
                         </p>
                       </div>
-                      <TrackLikeButton
-                        trackId={track.id.toString()}
-                        trackTitle={track.title}
-                        artistName={track.artist.name}
-                        audioUrl={track.preview}
-                        duration={track.duration}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <AddToPlaylistPopover
+                          trackId={track.id.toString()}
+                          trackTitle={track.title}
+                          artistName={track.artist.name}
+                          audioUrl={track.preview}
+                          duration={track.duration}
+                        />
+                        <TrackLikeButton
+                          trackId={track.id.toString()}
+                          trackTitle={track.title}
+                          artistName={track.artist.name}
+                          audioUrl={track.preview}
+                          duration={track.duration}
+                        />
+                      </div>
                       <Play className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-primary" />
                     </div>
                   ))}

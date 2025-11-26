@@ -4,6 +4,8 @@ import { MobileNav } from "@/components/MobileNav";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Play } from "lucide-react";
 import { AlbumCard } from "@/components/AlbumCard";
+import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
+import { TrackLikeButton } from "@/components/TrackLikeButton";
 import { useNavigate } from "react-router-dom";
 import { deezerApi, DeezerTrack } from "@/services/deezerApi";
 import { toast } from "sonner";
@@ -131,8 +133,26 @@ const Search = () => {
                         <div className="font-semibold text-sm sm:text-base truncate">{track.title}</div>
                         <div className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist.name}</div>
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
-                        {formatDuration(track.duration)}
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
+                          {formatDuration(track.duration)}
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <AddToPlaylistPopover
+                            trackId={track.id.toString()}
+                            trackTitle={track.title}
+                            artistName={track.artist.name}
+                            audioUrl={track.preview}
+                            duration={track.duration}
+                          />
+                          <TrackLikeButton
+                            trackId={track.id.toString()}
+                            trackTitle={track.title}
+                            artistName={track.artist.name}
+                            audioUrl={track.preview}
+                            duration={track.duration}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
