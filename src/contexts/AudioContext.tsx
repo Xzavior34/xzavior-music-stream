@@ -49,7 +49,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const crossfadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isCrossfadingRef = useRef(false);
   const CROSSFADE_DURATION = 3; // 3 seconds crossfade
-  const isGaplessRef = useRef(false); // For gapless playback mode
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -154,28 +153,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const currentAudio = audioRef.current;
     const nextAudio = nextAudioRef.current;
     
-    // Gapless mode: no fade, instant transition
-    if (isGaplessRef.current) {
-      nextAudio.src = nextTrack.audio_url;
-      nextAudio.volume = volume / 100;
-      nextAudio.play();
-      
-      // Instant swap
-      currentAudio.pause();
-      currentAudio.src = '';
-      
-      const temp = audioRef.current;
-      audioRef.current = nextAudioRef.current;
-      nextAudioRef.current = temp;
-      
-      setCurrentTrack(nextTrack);
-      setQueue(prev => prev.slice(1));
-      isCrossfadingRef.current = false;
-      logListeningHistory(nextTrack);
-      return;
-    }
-    
-    // Crossfade mode
+    // Prepare next track
     nextAudio.src = nextTrack.audio_url;
     nextAudio.volume = 0;
     nextAudio.play();
@@ -189,21 +167,28 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       step++;
       const progress = step / steps;
       
+      // Fade out current
       currentAudio.volume = startVolume * (1 - progress);
+      // Fade in next
       nextAudio.volume = startVolume * progress;
       
       if (step >= steps) {
         clearInterval(fadeInterval);
+        // Swap audio elements
         currentAudio.pause();
         currentAudio.src = '';
         
+        // Move next audio to current
         const temp = audioRef.current;
         audioRef.current = nextAudioRef.current;
         nextAudioRef.current = temp;
         
+        // Update state
         setCurrentTrack(nextTrack);
         setQueue(prev => prev.slice(1));
         isCrossfadingRef.current = false;
+        
+        // Log listening history
         logListeningHistory(nextTrack);
       }
     }, interval);
@@ -366,8 +351,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         removeFromQueue,
         toggleShuffle,
         toggleRepeat,
-        getAudioElement: () => audioRef.current,
-      } as any}
+      }}
     >
       {children}
     </AudioContext.Provider>
@@ -380,14 +364,4 @@ export const useAudio = () => {
     throw new Error('useAudio must be used within AudioProvider');
   }
   return context;
-};
-
-// Export audio element ref for visualizer
-export const useAudioElement = () => {
-  const context = useContext(AudioContext);
-  if (!context) {
-    throw new Error('useAudioElement must be used within AudioProvider');
-  }
-  // Access the internal audio ref through a custom method
-  return (context as any).getAudioElement?.() || null;
 };

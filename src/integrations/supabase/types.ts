@@ -202,41 +202,6 @@ export type Database = {
           },
         ]
       }
-      playlist_collaborators: {
-        Row: {
-          added_at: string | null
-          added_by: string | null
-          can_edit: boolean
-          id: string
-          playlist_id: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string | null
-          added_by?: string | null
-          can_edit?: boolean
-          id?: string
-          playlist_id: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string | null
-          added_by?: string | null
-          can_edit?: boolean
-          id?: string
-          playlist_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "playlist_collaborators_playlist_id_fkey"
-            columns: ["playlist_id"]
-            isOneToOne: false
-            referencedRelation: "playlists"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       playlist_tracks: {
         Row: {
           added_at: string | null
