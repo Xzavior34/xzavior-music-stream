@@ -1,10 +1,12 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAudio } from "@/contexts/AudioContext";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, X } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, X, ListMusic, Mic2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { QueueDialog } from "@/components/QueueDialog";
+import { LyricsDialog } from "@/components/LyricsDialog";
 
 interface NowPlayingDialogProps {
   open: boolean;
@@ -18,7 +20,8 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
     progress, 
     volume, 
     shuffle, 
-    repeat, 
+    repeat,
+    queue,
     togglePlay, 
     skipNext, 
     skipPrevious, 
@@ -30,6 +33,8 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
   
   const [localVolume, setLocalVolume] = useState([volume]);
   const [localProgress, setLocalProgress] = useState([progress]);
+  const [showQueue, setShowQueue] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
 
   useEffect(() => {
     setLocalProgress([progress]);
@@ -57,36 +62,62 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
   if (!currentTrack) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden bg-gradient-to-br from-background to-muted">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4 z-10"
-          onClick={() => onOpenChange(false)}
-        >
-          <X className="w-4 h-4" />
-        </Button>
-        
-        <div className="flex flex-col items-center p-8 pt-16">
-          {/* Album Art */}
-          <div className="w-72 h-72 rounded-2xl overflow-hidden shadow-2xl mb-8">
-            {currentTrack.image_url ? (
-              <img 
-                src={currentTrack.image_url} 
-                alt={currentTrack.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10" />
-            )}
-          </div>
+    <>
+      <QueueDialog open={showQueue} onOpenChange={setShowQueue} />
+      <LyricsDialog open={showLyrics} onOpenChange={setShowLyrics} />
+      
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden bg-gradient-to-br from-background to-muted">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 z-10"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+          
+          <div className="flex flex-col items-center p-8 pt-16">
+            {/* Album Art */}
+            <div className="w-72 h-72 rounded-2xl overflow-hidden shadow-2xl mb-8 animate-scale-in">
+              {currentTrack.image_url ? (
+                <img 
+                  src={currentTrack.image_url} 
+                  alt={currentTrack.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10" />
+              )}
+            </div>
 
-          {/* Track Info */}
-          <div className="text-center mb-8 w-full">
-            <h2 className="text-2xl font-bold mb-2 truncate">{currentTrack.title}</h2>
-            <p className="text-muted-foreground truncate">{currentTrack.artist_name}</p>
-          </div>
+            {/* Track Info */}
+            <div className="text-center mb-6 w-full animate-fade-in">
+              <h2 className="text-2xl font-bold mb-2 truncate">{currentTrack.title}</h2>
+              <p className="text-muted-foreground truncate">{currentTrack.artist_name}</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 mb-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLyrics(true)}
+                className="gap-2"
+              >
+                <Mic2 className="w-4 h-4" />
+                Lyrics
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowQueue(true)}
+                className="gap-2"
+              >
+                <ListMusic className="w-4 h-4" />
+                Queue ({queue.length})
+              </Button>
+            </div>
 
           {/* Progress Bar */}
           <div className="w-full mb-6">
@@ -156,5 +187,6 @@ export const NowPlayingDialog = ({ open, onOpenChange }: NowPlayingDialogProps) 
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };

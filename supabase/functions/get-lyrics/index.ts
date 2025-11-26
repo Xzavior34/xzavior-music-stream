@@ -18,27 +18,40 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    const { trackId } = await req.json();
+    const { trackId, title, artist } = await req.json();
     
-    if (!trackId) {
-      throw new Error('Track ID is required');
+    let trackInfo;
+    
+    if (trackId) {
+      // Get track information from database
+      const { data: track, error: trackError } = await supabase
+        .from('tracks')
+        .select('title, artist_name, duration')
+        .eq('id', trackId)
+        .single();
+
+      if (trackError || !track) {
+        console.error('Error fetching track:', trackError);
+        throw new Error('Track not found');
+      }
+      
+      trackInfo = {
+        title: track.title,
+        artist: track.artist_name,
+        duration: track.duration
+      };
+    } else if (title && artist) {
+      // Use provided title and artist
+      trackInfo = {
+        title,
+        artist,
+        duration: 180 // Default duration
+      };
+    } else {
+      throw new Error('Either trackId or (title and artist) is required');
     }
 
-    console.log('Fetching lyrics for track:', trackId);
-
-    // Get track information
-    const { data: track, error: trackError } = await supabase
-      .from('tracks')
-      .select('title, artist_name, duration')
-      .eq('id', trackId)
-      .single();
-
-    if (trackError || !track) {
-      console.error('Error fetching track:', trackError);
-      throw new Error('Track not found');
-    }
-
-    console.log('Track found:', track);
+    console.log('Track info:', trackInfo);
 
     // Use AI to generate synchronized lyrics
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -59,11 +72,11 @@ serve(async (req) => {
     {"time": 5.2, "text": "Second line"}
   ]
 }
-Each line should have a "time" in seconds and "text". Space lines naturally based on the song's rhythm. For a ${track.duration} second song, distribute lines evenly.`
+Each line should have a "time" in seconds and "text". Space lines naturally based on the song's rhythm. For a ${trackInfo.duration} second song, distribute lines evenly.`
           },
           {
             role: 'user',
-            content: `Generate synchronized lyrics with timestamps for "${track.title}" by ${track.artist_name}. Song duration: ${track.duration} seconds. Create meaningful, creative lyrics that match the mood. Return ONLY valid JSON.`
+            content: `Generate synchronized lyrics with timestamps for "${trackInfo.title}" by ${trackInfo.artist}. Song duration: ${trackInfo.duration} seconds. Create meaningful, creative lyrics that match the mood. Return ONLY valid JSON.`
           }
         ],
         temperature: 0.8,
@@ -91,8 +104,8 @@ Each line should have a "time" in seconds and "text". Space lines naturally base
       // Fallback lyrics
       lyrics = {
         lines: [
-          { time: 0, text: `${track.title}` },
-          { time: 3, text: `by ${track.artist_name}` },
+          { time: 0, text: `${trackInfo.title}` },
+          { time: 3, text: `by ${trackInfo.artist}` },
           { time: 6, text: "Lyrics generation in progress..." }
         ]
       };
