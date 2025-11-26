@@ -20,9 +20,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAudio } from "@/contexts/AudioContext";
 import { toast } from "sonner";
+import { NowPlayingDialog } from "@/components/NowPlayingDialog";
 
 export const MobileNav = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -53,6 +55,8 @@ export const MobileNav = () => {
 
   return (
     <>
+      <NowPlayingDialog open={showNowPlaying} onOpenChange={setShowNowPlaying} />
+      
       {/* --- TOP HEADER --- */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm pt-3 pb-2 px-4">
         <div className="flex items-center justify-between">
@@ -144,11 +148,20 @@ export const MobileNav = () => {
       {currentTrack && (
         <div 
           className="lg:hidden fixed bottom-[62px] left-2 right-2 z-40 bg-primary text-primary-foreground rounded-lg shadow-lg overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => setShowNowPlaying(true)}
         >
           <div className="flex items-center justify-between p-3 h-16">
             <div className="flex items-center gap-3 overflow-hidden flex-1">
-              <div className="w-12 h-12 bg-black/20 rounded flex-shrink-0 flex items-center justify-center">
-                <div className="w-10 h-10 rounded bg-gradient-to-br from-white/20 to-white/5" />
+              <div className="w-12 h-12 rounded flex-shrink-0 overflow-hidden">
+                {currentTrack.image_url ? (
+                  <img 
+                    src={currentTrack.image_url} 
+                    alt={currentTrack.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-white/20 to-white/5" />
+                )}
               </div>
               <div className="flex flex-col truncate flex-1">
                 <span className="text-sm font-semibold truncate">{currentTrack.title}</span>

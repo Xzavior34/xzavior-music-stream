@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MobileNav } from "@/components/MobileNav";
+import { Sidebar } from "@/components/Sidebar";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Play } from "lucide-react";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
@@ -38,24 +39,53 @@ const Search = () => {
     }
 
     setLoading(true);
-    try {
-      // Search uploaded music from Supabase
-      const { data: uploadedTracks } = await supabase
-        .from('tracks')
-        .select('*')
-        .or(`title.ilike.%${query}%,artist_name.ilike.%${query}%`)
-        .limit(20);
-      
-      setUploadedResults(uploadedTracks || []);
+    let hasResults = false;
+    
+    // Search uploaded music from Supabase
+    const uploadedPromise = (async () => {
+      try {
+        const { data } = await supabase
+          .from('tracks')
+          .select('*')
+          .or(`title.ilike.%${query}%,artist_name.ilike.%${query}%`)
+          .limit(20);
+        
+        if (data && data.length > 0) {
+          setUploadedResults(data);
+          hasResults = true;
+        } else {
+          setUploadedResults([]);
+        }
+      } catch (error) {
+        console.error('Uploaded tracks search failed:', error);
+        setUploadedResults([]);
+      }
+    })();
 
-      // Search from API (JioSaavn + Deezer fallback)
-      const results = await musicApi.searchTracks(query);
-      setSearchResults(results.slice(0, 20));
-    } catch (error) {
-      toast.error('Search failed');
-    } finally {
-      setLoading(false);
+    // Search from API (JioSaavn + Deezer fallback)
+    const apiPromise = (async () => {
+      try {
+        const results = await musicApi.searchTracks(query);
+        if (results.length > 0) {
+          setSearchResults(results);
+          hasResults = true;
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error('API search failed:', error);
+        setSearchResults([]);
+      }
+    })();
+
+    // Wait for both searches to complete
+    await Promise.allSettled([uploadedPromise, apiPromise]);
+
+    if (!hasResults) {
+      toast.info('No results found. Try a different search term.');
     }
+    
+    setLoading(false);
   };
 
   const handlePlayTrack = (track: UnifiedTrack) => {
@@ -90,6 +120,7 @@ const Search = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
       <MobileNav />
       
       <main className="flex-1 w-full overflow-y-auto pb-32 lg:pb-24 pt-[65px] lg:pt-8">
