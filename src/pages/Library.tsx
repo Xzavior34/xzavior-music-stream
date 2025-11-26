@@ -243,15 +243,17 @@ export default function Library() {
                       {formatDuration(track.duration)}
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {!track.isExternal && (
-                        <AddToPlaylistPopover
-                          trackId={track.id}
-                          trackTitle={track.title}
-                          artistName={track.artist_name}
-                          audioUrl={track.audio_url}
-                          duration={track.duration}
-                        />
-                      )}
+                      <AddToPlaylistPopover
+                        trackId={track.id}
+                        trackTitle={track.title}
+                        artistName={track.artist_name}
+                        audioUrl={track.audio_url}
+                        duration={track.duration}
+                        isExternalTrack={track.isExternal}
+                        imageUrl={track.image_url || undefined}
+                        previewUrl={track.audio_url}
+                        albumId={track.image_url || undefined}
+                      />
                       <TrackLikeButton
                         trackId={track.id}
                         trackTitle={track.title}

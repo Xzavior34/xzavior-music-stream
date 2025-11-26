@@ -205,6 +205,7 @@ export type Database = {
       playlist_tracks: {
         Row: {
           added_at: string | null
+          external_track_id: string | null
           id: string
           playlist_id: string | null
           position: number
@@ -212,6 +213,7 @@ export type Database = {
         }
         Insert: {
           added_at?: string | null
+          external_track_id?: string | null
           id?: string
           playlist_id?: string | null
           position: number
@@ -219,12 +221,20 @@ export type Database = {
         }
         Update: {
           added_at?: string | null
+          external_track_id?: string | null
           id?: string
           playlist_id?: string | null
           position?: number
           track_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "playlist_tracks_external_track_id_fkey"
+            columns: ["external_track_id"]
+            isOneToOne: false
+            referencedRelation: "external_tracks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "playlist_tracks_playlist_id_fkey"
             columns: ["playlist_id"]

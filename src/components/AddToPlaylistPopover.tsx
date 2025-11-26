@@ -20,6 +20,9 @@ interface AddToPlaylistPopoverProps {
   audioUrl?: string;
   duration?: number;
   albumId?: string;
+  isExternalTrack?: boolean; // true for Deezer tracks, false/undefined for uploaded tracks
+  imageUrl?: string;
+  previewUrl?: string;
 }
 
 export const AddToPlaylistPopover = ({
@@ -29,6 +32,9 @@ export const AddToPlaylistPopover = ({
   audioUrl,
   duration,
   albumId,
+  isExternalTrack = false,
+  imageUrl,
+  previewUrl,
 }: AddToPlaylistPopoverProps) => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [addedPlaylists, setAddedPlaylists] = useState<Set<string>>(new Set());
@@ -64,10 +70,11 @@ export const AddToPlaylistPopover = ({
     if (!user) return;
 
     try {
+      const column = isExternalTrack ? 'external_track_id' : 'track_id';
       const { data, error } = await supabase
         .from('playlist_tracks')
         .select('playlist_id')
-        .eq('track_id', trackId);
+        .eq(column, trackId);
 
       if (error) throw error;
       setAddedPlaylists(new Set(data?.map(pt => pt.playlist_id) || []));
@@ -86,8 +93,22 @@ export const AddToPlaylistPopover = ({
 
     setLoading(true);
     try {
-      // First ensure track exists
-      if (trackTitle && artistName && audioUrl && duration) {
+      // For external tracks, ensure they exist in external_tracks table
+      if (isExternalTrack && trackTitle && artistName && previewUrl && duration) {
+        await supabase
+          .from('external_tracks')
+          .upsert({
+            id: trackId,
+            title: trackTitle,
+            artist_name: artistName,
+            preview_url: previewUrl,
+            duration: duration,
+            image_url: imageUrl || null,
+            album_name: albumId || null,
+          }, { onConflict: 'id' });
+      } 
+      // For internal tracks, ensure they exist in tracks table
+      else if (!isExternalTrack && trackTitle && artistName && audioUrl && duration) {
         await supabase
           .from('tracks')
           .upsert({
@@ -112,14 +133,14 @@ export const AddToPlaylistPopover = ({
         ? existingTracks[0].position + 1 
         : 0;
 
-      // Add to playlist
+      // Add to playlist with correct track reference
+      const insertData = isExternalTrack
+        ? { playlist_id: playlistId, external_track_id: trackId, position: nextPosition }
+        : { playlist_id: playlistId, track_id: trackId, position: nextPosition };
+
       const { error } = await supabase
         .from('playlist_tracks')
-        .insert({
-          playlist_id: playlistId,
-          track_id: trackId,
-          position: nextPosition,
-        });
+        .insert(insertData);
 
       if (error) throw error;
 

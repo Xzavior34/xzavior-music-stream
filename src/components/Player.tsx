@@ -117,6 +117,9 @@ export const Player = () => {
             audioUrl={currentTrack.audio_url}
             duration={currentTrack.duration}
             albumId={currentTrack.album_id}
+            isExternalTrack={!currentTrack.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)}
+            imageUrl={currentTrack.image_url}
+            previewUrl={currentTrack.audio_url}
           />
         )}
         <Button
