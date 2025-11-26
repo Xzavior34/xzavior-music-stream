@@ -5,34 +5,28 @@ import Search from "./pages/Search";
 import AlbumDetail from "./pages/AlbumDetail";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import Library from "./pages/Library";
-import Premium from "./pages/Premium";
 import Create from "./pages/Create";
-import NowPlaying from "./pages/NowPlaying";
-import Queue from "./pages/Queue";
-import Install from "./pages/Install";
 import Profile from "./pages/Profile";
-import Discover from "./pages/Discover";
-import History from "./pages/History";
 import NotFound from "./pages/NotFound";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 
 const App = () => (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/auth" element={<Auth />} />
-    <Route path="/search" element={<Search />} />
-    <Route path="/discover" element={<Discover />} />
-    <Route path="/album/:id" element={<AlbumDetail />} />
-    <Route path="/playlist/:id" element={<PlaylistDetail />} />
-    <Route path="/library" element={<Library />} />
-    <Route path="/premium" element={<Premium />} />
-    <Route path="/create" element={<Create />} />
-    <Route path="/profile" element={<Profile />} />
-    <Route path="/history" element={<History />} />
-    <Route path="/now-playing" element={<NowPlaying />} />
-    <Route path="/queue" element={<Queue />} />
-    <Route path="/install" element={<Install />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
+  <>
+    <OfflineIndicator />
+    <PWAInstallPrompt />
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/search" element={<Search />} />
+      <Route path="/album/:id" element={<AlbumDetail />} />
+      <Route path="/playlist/:id" element={<PlaylistDetail />} />
+      <Route path="/library" element={<Library />} />
+      <Route path="/create" element={<Create />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </>
 );
 
 export default App;
