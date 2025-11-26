@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-// Removed Sidebar import
 import { MobileNav } from "@/components/MobileNav";
 import { useAudio } from "@/contexts/AudioContext";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
-import { Music, Heart, Clock } from "lucide-react";
+import { Music, Heart, Clock, List } from "lucide-react";
 import { toast } from "sonner";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface InternalLikedTrack {
   id: string;
@@ -51,8 +51,17 @@ interface CombinedTrack {
   isExternal: boolean;
 }
 
+interface Playlist {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  created_at: string;
+}
+
 export default function Library() {
   const [likedTracks, setLikedTracks] = useState<CombinedTrack[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { playTrack } = useAudio();
@@ -64,11 +73,13 @@ export default function Library() {
       return;
     }
     fetchLikedTracks();
+    fetchPlaylists();
   }, [user, navigate]);
 
-  // Real-time subscription for both internal and external liked tracks
+  // Real-time subscriptions
   useRealtimeSubscription('liked_tracks', ['liked_tracks'], user?.id);
   useRealtimeSubscription('liked_external_tracks', ['liked_external_tracks'], user?.id);
+  useRealtimeSubscription('playlists', ['playlists'], user?.id);
 
   const fetchLikedTracks = async () => {
     try {
@@ -159,6 +170,22 @@ export default function Library() {
     });
   };
 
+  const fetchPlaylists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('playlists')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPlaylists(data || []);
+    } catch (error) {
+      console.error('Error fetching playlists:', error);
+      toast.error('Failed to load playlists');
+    }
+  };
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -171,26 +198,15 @@ export default function Library() {
         <MobileNav />
         
         <div className="pt-[65px] lg:pt-8 px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 lg:w-56 lg:h-56 bg-gradient-to-br from-primary/40 to-primary/10 rounded flex items-center justify-center">
-                <Heart className="w-8 h-8 lg:w-24 lg:h-24 text-primary" fill="currentColor" />
-              </div>
-              <div className="lg:hidden flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Playlist</p>
-                <h1 className="text-2xl font-bold mb-2">Liked Songs</h1>
-                <p className="text-sm text-muted-foreground">{likedTracks.length} songs</p>
-              </div>
-            </div>
-            
-            <div className="hidden lg:block">
-              <p className="text-sm font-semibold mb-2">Playlist</p>
-              <h1 className="text-7xl font-black mb-6">Liked Songs</h1>
-              <p className="text-sm text-muted-foreground">{likedTracks.length} songs</p>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold mb-6">Your Library</h1>
+          
+          <Tabs defaultValue="songs" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="songs">Liked Songs</TabsTrigger>
+              <TabsTrigger value="playlists">Playlists</TabsTrigger>
+            </TabsList>
 
-          {loading ? (
+            <TabsContent value="songs">{loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
@@ -202,6 +218,7 @@ export default function Library() {
             </div>
           ) : (
             <div className="space-y-2">
+
               {likedTracks.map((track, index) => (
                 <div
                   key={`${track.id}-${track.created_at}`}
@@ -268,6 +285,50 @@ export default function Library() {
               ))}
             </div>
           )}
+            </TabsContent>
+
+            <TabsContent value="playlists">
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                </div>
+              ) : playlists.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <List className="w-16 h-16 text-muted-foreground mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">No playlists yet</h2>
+                  <p className="text-muted-foreground mb-6">Create your first playlist to get started</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {playlists.map((playlist) => (
+                    <div
+                      key={playlist.id}
+                      onClick={() => navigate(`/playlist/${playlist.id}`)}
+                      className="cursor-pointer group"
+                    >
+                      <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-3 group-hover:shadow-lg transition-shadow">
+                        {playlist.image_url ? (
+                          <img 
+                            src={playlist.image_url} 
+                            alt={playlist.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center">
+                            <List className="w-12 h-12 text-primary/60" />
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{playlist.title}</h3>
+                      {playlist.description && (
+                        <p className="text-sm text-muted-foreground truncate">{playlist.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

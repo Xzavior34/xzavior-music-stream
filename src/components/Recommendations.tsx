@@ -1,21 +1,26 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Play, Music } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface Recommendation {
+  id: string;
   title: string;
   artist: string;
-  genre?: string;
-  reason: string;
+  image_url: string;
+  preview_url: string;
+  duration: number;
+  album: string;
 }
 
 export const Recommendations = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { playTrack } = useAudio();
 
   const fetchRecommendations = async () => {
     if (!user) return;
@@ -44,6 +49,17 @@ export const Recommendations = () => {
       fetchRecommendations();
     }
   }, [user]);
+
+  const handlePlayTrack = (rec: Recommendation) => {
+    playTrack({
+      id: rec.id,
+      title: rec.title,
+      artist_name: rec.artist,
+      audio_url: rec.preview_url,
+      duration: rec.duration,
+      image_url: rec.image_url,
+    });
+  };
 
   if (!user) return null;
 
@@ -76,29 +92,33 @@ export const Recommendations = () => {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : recommendations.length > 0 ? (
-        <div className="grid gap-3">
-          {recommendations.map((rec, index) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {recommendations.map((rec) => (
             <div
-              key={index}
-              className="p-4 rounded-lg bg-gradient-to-r from-muted/60 to-muted/30 border border-border/50 hover:border-primary/50 transition-all"
+              key={rec.id}
+              className="group cursor-pointer"
+              onClick={() => handlePlayTrack(rec)}
             >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold">{rec.title}</p>
-                  <p className="text-sm text-muted-foreground">{rec.artist}</p>
-                  {rec.genre && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
-                      {rec.genre}
-                    </span>
-                  )}
-                  <p className="text-sm mt-2 text-muted-foreground italic">
-                    {rec.reason}
-                  </p>
+              <div className="relative aspect-square rounded-lg overflow-hidden bg-muted mb-3 group-hover:shadow-lg transition-all">
+                {rec.image_url ? (
+                  <img 
+                    src={rec.image_url} 
+                    alt={rec.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center">
+                    <Music className="w-12 h-12 text-primary/60" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                    <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
+                  </div>
                 </div>
               </div>
+              <h3 className="font-semibold truncate text-sm group-hover:text-primary transition-colors">{rec.title}</h3>
+              <p className="text-xs text-muted-foreground truncate">{rec.artist}</p>
             </div>
           ))}
         </div>
