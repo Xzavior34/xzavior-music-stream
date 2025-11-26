@@ -88,8 +88,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar hidden/removed to ensure full width on all screens */}
-      {/* <Sidebar className="hidden lg:flex w-64 flex-shrink-0" /> */}
+      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
       
       <main className="flex-1 w-full overflow-y-auto pb-[140px] lg:pb-24">
         {/* MobileNav handles the top bar and profile/menu click events */}

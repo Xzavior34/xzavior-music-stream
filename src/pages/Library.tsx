@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileNav } from "@/components/MobileNav";
+import { Sidebar } from "@/components/Sidebar";
 import { useAudio } from "@/contexts/AudioContext";
 import { AddToPlaylistPopover } from "@/components/AddToPlaylistPopover";
 import { TrackLikeButton } from "@/components/TrackLikeButton";
@@ -309,6 +310,7 @@ export default function Library() {
 
   return (
     <div className="flex min-h-screen overflow-hidden bg-background">
+      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
       <main className="flex-1 w-full overflow-y-auto pb-32 lg:pb-24">
         <MobileNav />
         

@@ -1,5 +1,5 @@
-// Removed Sidebar import
 import { MobileNav } from "@/components/MobileNav";
+import { Sidebar } from "@/components/Sidebar";
 import { SongUpload } from "@/components/SongUpload";
 import { useState } from "react";
 import { Plus, List } from "lucide-react";
@@ -55,9 +55,8 @@ export default function Create() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar component removed */}
+      <Sidebar className="hidden lg:flex w-64 flex-shrink-0" />
       
-      {/* Removed lg:ml-64 to make it full width */}
       <main className="flex-1 w-full pb-32 lg:pb-24">
         <MobileNav />
         

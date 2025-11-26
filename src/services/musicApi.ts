@@ -13,7 +13,7 @@ const getCorsProxy = () => {
   return CORS_PROXIES[currentProxyIndex];
 };
 
-const fetchWithTimeout = async (url: string, timeout = 8000): Promise<any> => {
+const fetchWithTimeout = async (url: string, timeout = 10000): Promise<any> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
@@ -21,11 +21,21 @@ const fetchWithTimeout = async (url: string, timeout = 8000): Promise<any> => {
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
     
-    if (!response.ok) throw new Error('Network response was not ok');
-    return await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
   } catch (error) {
     clearTimeout(timeoutId);
-    throw error;
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout');
+      }
+      throw error;
+    }
+    throw new Error('Unknown error occurred');
   }
 };
 
@@ -44,148 +54,196 @@ export interface UnifiedTrack {
 export const musicApi = {
   // Search tracks with primary and fallback
   searchTracks: async (query: string): Promise<UnifiedTrack[]> => {
-    // Try JioSaavn first
-    try {
-      const url = `${JIOSAAVN_BASE}/search/songs?query=${encodeURIComponent(query)}`;
-      const data = await fetchWithTimeout(url);
-      
-      if (data?.data?.results && data.data.results.length > 0) {
-        return data.data.results.map((track: any) => ({
-          id: track.id,
-          title: track.name,
-          artist: track.primaryArtists,
-          duration: track.duration,
-          audioUrl: track.downloadUrl?.[4]?.url || track.downloadUrl?.[track.downloadUrl.length - 1]?.url,
-          imageUrl: track.image?.[2]?.url || track.image?.[track.image.length - 1]?.url,
-          albumTitle: track.album?.name,
-          source: 'jiosaavn' as const,
-          isPreview: false,
-        })).filter((track: UnifiedTrack) => track.audioUrl);
-      }
-    } catch (error) {
-      console.warn('JioSaavn primary failed, trying fallback:', error);
-      
-      // Try JioSaavn fallback URL
-      try {
-        const url = `${JIOSAAVN_FALLBACK}/search/songs?query=${encodeURIComponent(query)}`;
-        const data = await fetchWithTimeout(url);
-        
-        if (data?.data?.results && data.data.results.length > 0) {
-          return data.data.results.map((track: any) => ({
-            id: track.id,
-            title: track.name,
-            artist: track.primaryArtists,
-            duration: track.duration,
-            audioUrl: track.downloadUrl?.[4]?.url || track.downloadUrl?.[track.downloadUrl.length - 1]?.url,
-            imageUrl: track.image?.[2]?.url || track.image?.[track.image.length - 1]?.url,
-            albumTitle: track.album?.name,
-            source: 'jiosaavn' as const,
-            isPreview: false,
-          })).filter((track: UnifiedTrack) => track.audioUrl);
-        }
-      } catch (fallbackError) {
-        console.warn('JioSaavn fallback also failed:', fallbackError);
-      }
+    if (!query || query.trim().length < 2) {
+      return [];
     }
+
+    const trimmedQuery = query.trim();
     
-    // Fallback to Deezer
+    // Try JioSaavn primary
     try {
-      const proxy = getCorsProxy();
-      const url = `${DEEZER_API_BASE}/search?q=${encodeURIComponent(query)}`;
-      const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`);
+      const url = `${JIOSAAVN_BASE}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
+      const data = await fetchWithTimeout(url, 8000);
       
-      if (data?.data && data.data.length > 0) {
-        return data.data.map((track: any) => ({
-          id: track.id.toString(),
-          title: track.title,
-          artist: track.artist.name,
-          duration: track.duration,
-          audioUrl: track.preview,
-          imageUrl: track.album.cover_xl || track.album.cover_medium,
-          albumTitle: track.album.title,
-          source: 'deezer' as const,
-          isPreview: true,
-        }));
+      if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
+        const tracks = data.data.results
+          .map((track: any) => {
+            // Validate required fields
+            if (!track.id || !track.name || !track.primaryArtists) {
+              return null;
+            }
+
+            // Get best quality audio URL
+            const audioUrl = track.downloadUrl?.[4]?.url || 
+                           track.downloadUrl?.[3]?.url || 
+                           track.downloadUrl?.[track.downloadUrl?.length - 1]?.url;
+            
+            // Get best quality image
+            const imageUrl = track.image?.[2]?.url || 
+                           track.image?.[1]?.url || 
+                           track.image?.[0]?.url;
+
+            if (!audioUrl) {
+              return null;
+            }
+
+            return {
+              id: track.id,
+              title: track.name,
+              artist: track.primaryArtists,
+              duration: track.duration || 0,
+              audioUrl: audioUrl,
+              imageUrl: imageUrl || '',
+              albumTitle: track.album?.name || '',
+              source: 'jiosaavn' as const,
+              isPreview: false,
+            };
+          })
+          .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
+
+        if (tracks.length > 0) {
+          return tracks;
+        }
       }
     } catch (error) {
-      console.error('Deezer fallback also failed:', error);
+      console.warn('JioSaavn primary failed:', error);
+    }
+
+    // Try JioSaavn fallback
+    try {
+      const url = `${JIOSAAVN_FALLBACK}/search/songs?query=${encodeURIComponent(trimmedQuery)}&limit=20`;
+      const data = await fetchWithTimeout(url, 8000);
       
-      // Try with alternate proxy
+      if (data?.data?.results && Array.isArray(data.data.results) && data.data.results.length > 0) {
+        const tracks = data.data.results
+          .map((track: any) => {
+            if (!track.id || !track.name || !track.primaryArtists) {
+              return null;
+            }
+
+            const audioUrl = track.downloadUrl?.[4]?.url || 
+                           track.downloadUrl?.[3]?.url || 
+                           track.downloadUrl?.[track.downloadUrl?.length - 1]?.url;
+            
+            const imageUrl = track.image?.[2]?.url || 
+                           track.image?.[1]?.url || 
+                           track.image?.[0]?.url;
+
+            if (!audioUrl) {
+              return null;
+            }
+
+            return {
+              id: track.id,
+              title: track.name,
+              artist: track.primaryArtists,
+              duration: track.duration || 0,
+              audioUrl: audioUrl,
+              imageUrl: imageUrl || '',
+              albumTitle: track.album?.name || '',
+              source: 'jiosaavn' as const,
+              isPreview: false,
+            };
+          })
+          .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
+
+        if (tracks.length > 0) {
+          return tracks;
+        }
+      }
+    } catch (error) {
+      console.warn('JioSaavn fallback failed:', error);
+    }
+
+    // Final fallback to Deezer
+    for (let proxyAttempt = 0; proxyAttempt < CORS_PROXIES.length; proxyAttempt++) {
       try {
-        currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
         const proxy = getCorsProxy();
-        const url = `${DEEZER_API_BASE}/search?q=${encodeURIComponent(query)}`;
-        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`);
+        const url = `${DEEZER_API_BASE}/search?q=${encodeURIComponent(trimmedQuery)}&limit=20`;
+        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 8000);
         
-        if (data?.data && data.data.length > 0) {
-          return data.data.map((track: any) => ({
-            id: track.id.toString(),
-            title: track.title,
-            artist: track.artist.name,
-            duration: track.duration,
-            audioUrl: track.preview,
-            imageUrl: track.album.cover_xl || track.album.cover_medium,
-            albumTitle: track.album.title,
-            source: 'deezer' as const,
-            isPreview: true,
-          }));
+        if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+          const tracks = data.data
+            .map((track: any) => {
+              if (!track.id || !track.title || !track.artist?.name || !track.preview) {
+                return null;
+              }
+
+              return {
+                id: track.id.toString(),
+                title: track.title,
+                artist: track.artist.name,
+                duration: track.duration || 0,
+                audioUrl: track.preview,
+                imageUrl: track.album?.cover_xl || track.album?.cover_medium || '',
+                albumTitle: track.album?.title || '',
+                source: 'deezer' as const,
+                isPreview: true,
+              };
+            })
+            .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
+
+          if (tracks.length > 0) {
+            return tracks;
+          }
         }
-      } catch (finalError) {
-        console.error('All APIs failed:', finalError);
+      } catch (error) {
+        console.warn(`Deezer attempt ${proxyAttempt + 1} failed:`, error);
+        // Try next proxy
+        currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
       }
     }
+
+    // Reset proxy index for next search
+    currentProxyIndex = 0;
     
+    // Return empty array if all attempts failed
     return [];
   },
 
   // Get trending/chart tracks
   getChart: async (): Promise<UnifiedTrack[]> => {
     // Try Deezer for trending since JioSaavn doesn't have a direct chart endpoint
-    try {
-      const proxy = getCorsProxy();
-      const url = `${DEEZER_API_BASE}/chart/0/tracks`;
-      const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`);
-      
-      if (data?.data && data.data.length > 0) {
-        return data.data.map((track: any) => ({
-          id: track.id.toString(),
-          title: track.title,
-          artist: track.artist.name,
-          duration: track.duration,
-          audioUrl: track.preview,
-          imageUrl: track.album.cover_xl || track.album.cover_medium,
-          albumTitle: track.album.title,
-          source: 'deezer' as const,
-          isPreview: true,
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to fetch chart:', error);
-      
-      // Try with alternate proxy
+    for (let proxyAttempt = 0; proxyAttempt < CORS_PROXIES.length; proxyAttempt++) {
       try {
-        currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
         const proxy = getCorsProxy();
-        const url = `${DEEZER_API_BASE}/chart/0/tracks`;
-        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`);
+        const url = `${DEEZER_API_BASE}/chart/0/tracks?limit=20`;
+        const data = await fetchWithTimeout(`${proxy}${encodeURIComponent(url)}`, 8000);
         
-        if (data?.data && data.data.length > 0) {
-          return data.data.map((track: any) => ({
-            id: track.id.toString(),
-            title: track.title,
-            artist: track.artist.name,
-            duration: track.duration,
-            audioUrl: track.preview,
-            imageUrl: track.album.cover_xl || track.album.cover_medium,
-            albumTitle: track.album.title,
-            source: 'deezer' as const,
-            isPreview: true,
-          }));
+        if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+          const tracks = data.data
+            .map((track: any) => {
+              if (!track.id || !track.title || !track.artist?.name || !track.preview) {
+                return null;
+              }
+
+              return {
+                id: track.id.toString(),
+                title: track.title,
+                artist: track.artist.name,
+                duration: track.duration || 0,
+                audioUrl: track.preview,
+                imageUrl: track.album?.cover_xl || track.album?.cover_medium || '',
+                albumTitle: track.album?.title || '',
+                source: 'deezer' as const,
+                isPreview: true,
+              };
+            })
+            .filter((track: UnifiedTrack | null): track is UnifiedTrack => track !== null);
+
+          if (tracks.length > 0) {
+            return tracks;
+          }
         }
-      } catch (finalError) {
-        console.error('All chart fetch attempts failed:', finalError);
+      } catch (error) {
+        console.warn(`Chart fetch attempt ${proxyAttempt + 1} failed:`, error);
+        // Try next proxy
+        currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
       }
     }
+
+    // Reset proxy index
+    currentProxyIndex = 0;
     
     return [];
   },
