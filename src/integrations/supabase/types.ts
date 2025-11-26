@@ -76,6 +76,71 @@ export type Database = {
         }
         Relationships: []
       }
+      external_tracks: {
+        Row: {
+          album_name: string | null
+          artist_name: string
+          created_at: string | null
+          duration: number
+          id: string
+          image_url: string | null
+          preview_url: string
+          source: string
+          title: string
+        }
+        Insert: {
+          album_name?: string | null
+          artist_name: string
+          created_at?: string | null
+          duration: number
+          id: string
+          image_url?: string | null
+          preview_url: string
+          source?: string
+          title: string
+        }
+        Update: {
+          album_name?: string | null
+          artist_name?: string
+          created_at?: string | null
+          duration?: number
+          id?: string
+          image_url?: string | null
+          preview_url?: string
+          source?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      liked_external_tracks: {
+        Row: {
+          created_at: string | null
+          id: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liked_external_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "external_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       liked_tracks: {
         Row: {
           created_at: string | null
